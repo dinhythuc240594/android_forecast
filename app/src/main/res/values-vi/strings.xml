@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">Dự báo thời tiết</string>
+    <string name="menu_settings">Cài đặt</string>
+    <string name="title_activity_main">Màn hình chính</string>
+    <color name="opaque_red">#f00</color>
+    <string name="reload_btn">Làm mới</string>
+    <string name="weather">Thời tiết</string>
+    <string name="des_ico_weather">Biểu tượng thời tiết</string>
+    <string name="start_ser">Xem thời tiết</string>
+    <string name="stop_ser">Thoát</string>
+    <string name="des_bg_weather">Hình nền thời tiết</string>
+</resources>

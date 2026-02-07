@@ -1,5 +1,6 @@
 package com.example.myapplication;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -13,6 +14,8 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
@@ -25,6 +28,20 @@ public class MainActivity extends AppCompatActivity {
     private Spinner spinnerLanguage;
     private String[] languages = {"English", "Vietnamese"}; // Display names
     private String[] languageCodes = {"en", "vi"};      // Language codes
+
+//    private ActivityResultLauncher<Intent> launcher = registerForActivityResult(
+//      new ActivityResultContracts.StartActivityForResult(),
+//      result -> {
+//          if(result.getResultCode() == Activity.RESULT_OK){
+//              Intent data = result.getData();
+//              if(data != null){
+//                  String userId = data.getStringExtra("user_id");
+//              }
+//          }
+//      }
+//    );
+//
+//    Intent intent = new Intent(this, MyService.class);
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {

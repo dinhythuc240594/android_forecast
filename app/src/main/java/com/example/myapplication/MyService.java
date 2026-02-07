@@ -2,6 +2,7 @@ package com.example.myapplication;
 
 import android.app.Service;
 import android.content.Intent;
+import android.os.Bundle;
 import android.os.IBinder;
 import android.widget.Toast;
 
@@ -20,10 +21,19 @@ public class MyService extends Service {
     /** indicates whether onRebind should be used */
     boolean mAllowRebind;
 
+//    Intent intent = new Intent(MyService.this, MainActivity.class);
+//    intent.putExtra("user_id", 123);
+//    intent.putExtra("name", "Nguyen van A");
+
     /** Called when the service is being created. */
     @Override
+//    public void onCreate(Bundle savedInstanceState) {
     public void onCreate() {
-
+//        super.OnCreate(savedInstanceState);
+//        setContentView(R.layout.activity_main);
+//
+//        int userId = getIntent().getIntExtra("user_id");
+//        String name = getIntent().getIntExtra("name");
     }
 
     /** The service is starting, due to a call to startService() */

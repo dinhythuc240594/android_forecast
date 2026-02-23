@@ -12,6 +12,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -24,67 +25,66 @@ import androidx.core.os.LocaleListCompat;
 public class MainActivity extends AppCompatActivity {
 
     String msg = "Android: ";
-
+    private TextView txtWelcome;
     private Spinner spinnerLanguage;
     private String[] languages = {"English", "Vietnamese"}; // Display names
     private String[] languageCodes = {"en", "vi"};      // Language codes
 
-//    private ActivityResultLauncher<Intent> launcher = registerForActivityResult(
-//      new ActivityResultContracts.StartActivityForResult(),
-//      result -> {
-//          if(result.getResultCode() == Activity.RESULT_OK){
-//              Intent data = result.getData();
-//              if(data != null){
-//                  String userId = data.getStringExtra("user_id");
-//              }
-//          }
-//      }
-//    );
-//
-//    Intent intent = new Intent(this, MyService.class);
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
 
         Log.d(msg, "The onCreate() event");
 
-        spinnerLanguage = findViewById(R.id.spinnerLanguage);
-        // Create an ArrayAdapter using the string array and a default spinner layout
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
-                android.R.layout.simple_spinner_item, languages);
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
 
-        // Specify the layout to use when the list of choices appears
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        txtWelcome = findViewById(R.id.txtWelcome);
 
-        // Apply the adapter to the spinner
-        spinnerLanguage.setAdapter(adapter);
-        spinnerLanguage.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener(){
-            @Override
-            public void onItemSelected(AdapterView<?> arg0, View arg1,
-                                       int pos, long id) {
+        Intent intent = getIntent();
 
-                String selectedLanguageCode = languageCodes[pos];
-                setAppLocale(selectedLanguageCode);
+        if(intent != null){
+            String receivedEmail = intent.getStringExtra("email");
+            if(receivedEmail != null) {
+                txtWelcome.setText("Welcome, " + receivedEmail);
             }
+        }
 
-            @Override
-            public void onNothingSelected(AdapterView<?> arg0) {
-                // TODO Auto-generated method stub
-
-            }
-
-            private void setAppLocale(String languageCode) {
-                // Use the modern AppCompat way to set the locale
-                LocaleListCompat appLocale = LocaleListCompat.forLanguageTags(languageCode);
-                AppCompatDelegate.setApplicationLocales(appLocale);
-
-                // Recreate the activity for changes to take effect immediately in the UI
-                recreate();
-            }
-
-        });
+//        spinnerLanguage = findViewById(R.id.spinnerLanguage);
+//        // Create an ArrayAdapter using the string array and a default spinner layout
+//        ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
+//                android.R.layout.simple_spinner_item, languages);
+//
+//        // Specify the layout to use when the list of choices appears
+//        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+//
+//        // Apply the adapter to the spinner
+//        spinnerLanguage.setAdapter(adapter);
+//        spinnerLanguage.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener(){
+//            @Override
+//            public void onItemSelected(AdapterView<?> arg0, View arg1,
+//                                       int pos, long id) {
+//
+//                String selectedLanguageCode = languageCodes[pos];
+//                setAppLocale(selectedLanguageCode);
+//            }
+//
+//            @Override
+//            public void onNothingSelected(AdapterView<?> arg0) {
+//                // TODO Auto-generated method stub
+//
+//            }
+//
+//            private void setAppLocale(String languageCode) {
+//                // Use the modern AppCompat way to set the locale
+//                LocaleListCompat appLocale = LocaleListCompat.forLanguageTags(languageCode);
+//                AppCompatDelegate.setApplicationLocales(appLocale);
+//
+//                // Recreate the activity for changes to take effect immediately in the UI
+//                recreate();
+//            }
+//
+//        });
     }
 
     @Override

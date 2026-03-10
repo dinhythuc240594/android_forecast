@@ -13,13 +13,18 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import androidx.core.app.ActivityCompat;
 import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+
+import org.json.JSONException;
 import org.json.JSONObject;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
@@ -27,12 +32,12 @@ import com.google.android.gms.location.LocationServices;
 public class MainActivity extends AppCompatActivity {
 
     private String msg = "";
-    private Button button;
-    private TextView textView;
+    private TextView txtCity, txtTemp, txtDesc;
+    private Button btnGoToList, btnSettings;
     private FusedLocationProviderClient fusedLocationClient;
 
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 100;
-    private static final String API_KEY = "YOUR_API_KEY"; // Replace with your OpenWeatherMap API Key
+    private static final String API_KEY = "35cb8751251c30622d255e40d059e07b"; // Replace with your OpenWeatherMap API Key
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -40,86 +45,77 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        textView = findViewById(R.id.textView);
-        button = findViewById(R.id.button);
+        txtCity = findViewById(R.id.txtCity);
+        txtTemp = findViewById(R.id.txtTemp);
+        txtDesc = findViewById(R.id.txtDesc);
+        btnGoToList = findViewById(R.id.btnGoToList);
+        btnSettings = findViewById(R.id.btnSettings);
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-        button.setOnClickListener(v -> checkLocationPermission());
+
+        getLocation();
+
+        btnGoToList.setOnClickListener(v ->
+                startActivity(new Intent(MainActivity.this, CityListActivity.class)));
+
+        btnSettings.setOnClickListener(v ->
+                startActivity(new Intent(MainActivity.this, SettingsActivity.class)));
     }
 
-    private void checkLocationPermission() {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+    private void fetchWeatherData(double lat, double lon) {
+        String url = "https://api.openweathermap.org/data/2.5/weather?lat=" + lat +
+                "&lon=" + lon + "&appid=" + API_KEY + "&units=metric&lang=vi";
 
-            // Request location permissions
-            ActivityCompat.requestPermissions(
-                    this,
-                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION},
-                    LOCATION_PERMISSION_REQUEST_CODE
-            );
-        } else {
-            // Permissions already granted, fetch location
-            fetchLocation();
-        }
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                // Permission granted, fetch location
-                fetchLocation();
-            } else {
-                // Permission denied, show message
-                Toast.makeText(this, "Location permission denied!", Toast.LENGTH_SHORT).show();
-            }
-        }
-    }
-
-    @SuppressLint("MissingPermission")
-    private void fetchLocation() {
-        fusedLocationClient.getLastLocation()
-                .addOnSuccessListener(location -> {
-                    if (location != null) {
-                        double latitude = location.getLatitude();
-                        double longitude = location.getLongitude();
-                        String weatherUrl = "https://api.openweathermap.org/data/2.5/weather?lat=" + latitude +
-                                "&lon=" + longitude + "&units=metric&appid=" + API_KEY;
-
-                        // Debugging: Log URL
-                        System.out.println("Weather API URL: " + weatherUrl);
-
-                        fetchWeatherData(weatherUrl);
-                    } else {
-                        textView.setText("Could not get location.");
-                    }
-                })
-                .addOnFailureListener(e -> Toast.makeText(this, "Failed to get location", Toast.LENGTH_SHORT).show());
-    }
-
-    private void fetchWeatherData(String url) {
-        StringRequest request = new StringRequest(Request.Method.GET, url,
+        RequestQueue queue = Volley.newRequestQueue(this);
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, url, null,
                 response -> {
                     try {
-                        JSONObject jsonResponse = new JSONObject(response);
-                        JSONObject main = jsonResponse.getJSONObject("main");
-                        String temperature = main.getString("temp");
-                        String city = jsonResponse.getString("name");
+                        // Lấy tên thành phố
+                        String cityName = response.getString("name");
 
-                        // Update UI with fetched data
-                        textView.setText(temperature + "°C in " + city);
-                    } catch (Exception e) {
-                        textView.setText("Error parsing data!");
+                        // Lấy nhiệt độ từ object "main"
+                        JSONObject main = response.getJSONObject("main");
+                        double temp = main.getDouble("temp");
+
+                        // Lấy mô tả từ array "weather"
+                        String description = response.getJSONArray("weather")
+                                .getJSONObject(0).getString("description");
+
+                        // Hiển thị lên giao diện
+                        txtCity.setText(cityName);
+                        txtTemp.setText(Math.round(temp) + "°C");
+                        txtDesc.setText(description.substring(0, 1).toUpperCase() + description.substring(1));
+
+                    } catch (JSONException e) {
                         e.printStackTrace();
                     }
                 },
-                error -> {
-                    textView.setText("Error fetching weather!");
-                    error.printStackTrace();
-                });
+                error -> Toast.makeText(MainActivity.this, "Lỗi kết nối API", Toast.LENGTH_SHORT).show());
 
-        Volley.newRequestQueue(this).add(request);
+        queue.add(jsonObjectRequest);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == 100 && grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            getLocation();
+        }
+    }
+
+    private void getLocation() {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 100);
+            return;
+        }
+
+        fusedLocationClient.getLastLocation().addOnSuccessListener(this, location -> {
+            if (location != null) {
+                fetchWeatherData(location.getLatitude(), location.getLongitude());
+            } else {
+                txtCity.setText("Không thể lấy vị trí GPS");
+            }
+        });
     }
 
     @Override

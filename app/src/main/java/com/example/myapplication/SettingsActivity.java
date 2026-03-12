@@ -1,63 +1,57 @@
 package com.example.myapplication;
 
-import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.RadioButton;
-import android.widget.RadioGroup;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 public class SettingsActivity extends AppCompatActivity {
 
-    private RadioGroup radioGroupUnit;
-    private RadioButton rbCelsius, rbFahrenheit;
+    private RadioButton rbCelsius;
+    private RadioButton rbFahrenheit;
+    private RadioButton rbVietnamese;
+    private RadioButton rbEnglish;
     private Button btnSaveSettings;
-
-    // Tên file lưu trữ cấu hình
-    private static final String PREF_NAME = "WeatherAppPrefs";
-    private static final String KEY_UNIT = "unit"; // Giá trị lưu sẽ là "metric" hoặc "imperial"
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        LanguageHelper.applySavedLanguage(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
 
-        // Ánh xạ View
-        radioGroupUnit = findViewById(R.id.radioGroupUnit);
         rbCelsius = findViewById(R.id.rbCelsius);
         rbFahrenheit = findViewById(R.id.rbFahrenheit);
+        rbVietnamese = findViewById(R.id.rbVietnamese);
+        rbEnglish = findViewById(R.id.rbEnglish);
         btnSaveSettings = findViewById(R.id.btnSaveSettings);
 
-        // Khởi tạo SharedPreferences
-        SharedPreferences sharedPreferences = getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
-
-        // Đọc cấu hình cũ để check vào RadioButton tương ứng (Mặc định là "metric" - Độ C)
-        String currentUnit = sharedPreferences.getString(KEY_UNIT, "metric");
-        if (currentUnit.equals("metric")) {
+        String currentUnit = WeatherPreferences.getUnit(this);
+        if ("metric".equals(currentUnit)) {
             rbCelsius.setChecked(true);
         } else {
             rbFahrenheit.setChecked(true);
         }
 
-        // Xử lý sự kiện lưu
+        String currentLanguage = LanguageHelper.getCurrentLanguage(this);
+        if (LanguageHelper.LANGUAGE_VIETNAMESE.equals(currentLanguage)) {
+            rbVietnamese.setChecked(true);
+        } else {
+            rbEnglish.setChecked(true);
+        }
+
         btnSaveSettings.setOnClickListener(v -> {
-            String selectedUnit = "metric"; // Mặc định
+            String selectedUnit = rbFahrenheit.isChecked() ? "imperial" : "metric";
+            String selectedLanguage = rbVietnamese.isChecked()
+                    ? LanguageHelper.LANGUAGE_VIETNAMESE
+                    : LanguageHelper.LANGUAGE_ENGLISH;
 
-            if (rbFahrenheit.isChecked()) {
-                selectedUnit = "imperial";
-            }
+            WeatherPreferences.saveUnit(this, selectedUnit);
+            WeatherPreferences.saveLanguage(this, selectedLanguage);
+            LanguageHelper.applyLanguage(selectedLanguage);
 
-            // Lưu vào SharedPreferences
-            SharedPreferences.Editor editor = sharedPreferences.edit();
-            editor.putString(KEY_UNIT, selectedUnit);
-            editor.apply(); // apply() lưu bất đồng bộ, tốt hơn commit()
-
-            Toast.makeText(SettingsActivity.this, "Đã lưu cài đặt!", Toast.LENGTH_SHORT).show();
-
-            // Đóng màn hình cài đặt để quay về màn hình trước đó
+            Toast.makeText(this, R.string.settings_saved, Toast.LENGTH_SHORT).show();
             finish();
         });
     }

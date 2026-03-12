@@ -2,25 +2,27 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="24dp"
+    android:background="#E3F2FD"
     android:gravity="center_horizontal"
-    android:background="#E3F2FD"> <Button
-    android:id="@+id/btnBack"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:text="Quay lại"
-    android:layout_gravity="start"
-    android:layout_marginBottom="20dp"/>
+    android:orientation="vertical"
+    android:padding="24dp">
+
+    <Button
+        android:id="@+id/btnBack"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="start"
+        android:layout_marginBottom="20dp"
+        android:text="@string/detail_back" />
 
     <TextView
         android:id="@+id/txtDetailCity"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Tên Thành Phố"
+        android:text="@string/detail_city_placeholder"
+        android:textColor="#1565C0"
         android:textSize="32sp"
-        android:textStyle="bold"
-        android:textColor="#1565C0" />
+        android:textStyle="bold" />
 
     <TextView
         android:id="@+id/txtDetailTemp"
@@ -36,10 +38,10 @@
         android:id="@+id/txtDetailDesc"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Mô tả thời tiết"
-        android:textSize="20sp"
+        android:layout_marginBottom="40dp"
+        android:text="@string/detail_desc_placeholder"
         android:textColor="#555555"
-        android:layout_marginBottom="40dp" />
+        android:textSize="20sp" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -60,9 +62,9 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Độ ẩm"
-                android:textSize="16sp"
-                android:textColor="#888888" />
+                android:text="@string/main_label_humidity"
+                android:textColor="#888888"
+                android:textSize="16sp" />
 
             <TextView
                 android:id="@+id/txtHumidity"
@@ -84,9 +86,9 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Gió"
-                android:textSize="16sp"
-                android:textColor="#888888" />
+                android:text="@string/main_label_wind"
+                android:textColor="#888888"
+                android:textSize="16sp" />
 
             <TextView
                 android:id="@+id/txtWind"

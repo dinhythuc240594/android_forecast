@@ -8,24 +8,21 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.android.volley.Request;
-import com.android.volley.RequestQueue;
-import com.android.volley.toolbox.JsonObjectRequest;
-import com.android.volley.toolbox.Volley;
-
-import org.json.JSONException;
-import org.json.JSONObject;
+import java.util.Locale;
 
 public class DetailActivity extends AppCompatActivity {
 
-    private TextView txtDetailCity, txtDetailTemp, txtDetailDesc, txtHumidity, txtWind;
-    private Button btnBack;
+    private static final String WEATHER_REQUEST_TAG = "detail_weather";
 
-    // Nhớ dùng lại API Key của bạn nhé
-    private final String API_KEY = "YOUR_API_KEY_HERE";
+    private TextView txtDetailCity, txtDetailTemp, txtDetailDesc, txtHumidity, txtWind;
+    private WeatherRepository weatherRepository;
+    private String cityName;
+    private String currentUnit;
+    private String currentLanguage;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        LanguageHelper.applySavedLanguage(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
 
@@ -35,60 +32,78 @@ public class DetailActivity extends AppCompatActivity {
         txtDetailDesc = findViewById(R.id.txtDetailDesc);
         txtHumidity = findViewById(R.id.txtHumidity);
         txtWind = findViewById(R.id.txtWind);
-        btnBack = findViewById(R.id.btnBack);
+        Button btnBack = findViewById(R.id.btnBack);
+        weatherRepository = new WeatherRepository(this);
+        currentUnit = WeatherPreferences.getUnit(this);
+        currentLanguage = LanguageHelper.getCurrentLanguage(this);
 
         // Nút quay lại màn hình trước
         btnBack.setOnClickListener(v -> finish());
 
         // Nhận dữ liệu (Tên thành phố) từ Intent
         Intent intent = getIntent();
-        String cityName = intent.getStringExtra("CITY_NAME");
+        cityName = intent.getStringExtra("CITY_NAME");
 
         if (cityName != null && !cityName.isEmpty()) {
             txtDetailCity.setText(cityName);
-            fetchWeatherDetails(cityName);
+            if (WeatherRepository.hasApiKey()) {
+                fetchWeatherDetails(cityName);
+            } else {
+                showWeatherError(getString(R.string.detail_missing_api_key));
+            }
         } else {
-            Toast.makeText(this, "Không nhận được tên thành phố", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.detail_missing_city, Toast.LENGTH_SHORT).show();
         }
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        String selectedUnit = WeatherPreferences.getUnit(this);
+        String selectedLanguage = LanguageHelper.getCurrentLanguage(this);
+        if (cityName != null && (!selectedUnit.equals(currentUnit) || !selectedLanguage.equals(currentLanguage))) {
+            currentUnit = selectedUnit;
+            currentLanguage = selectedLanguage;
+            fetchWeatherDetails(cityName);
+        }
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        weatherRepository.cancel(WEATHER_REQUEST_TAG);
+    }
+
     private void fetchWeatherDetails(String cityName) {
-        // Gọi API dựa trên tên thành phố (q=cityName)
-        String url = "https://api.openweathermap.org/data/2.5/weather?q=" + cityName +
-                "&appid=" + API_KEY + "&units=metric&lang=vi";
+        currentUnit = WeatherPreferences.getUnit(this);
+        txtDetailDesc.setText(R.string.detail_loading);
+        weatherRepository.fetchWeatherByCity(cityName, currentUnit, WEATHER_REQUEST_TAG, new WeatherRepository.WeatherCallback() {
+            @Override
+            public void onSuccess(WeatherInfo weatherInfo) {
+                txtDetailCity.setText(weatherInfo.getCityName());
+                txtDetailTemp.setText(Math.round(weatherInfo.getTemperature()) + WeatherPreferences.getTemperatureUnitSymbol(DetailActivity.this));
+                txtDetailDesc.setText(weatherInfo.getDescription());
+                txtHumidity.setText(weatherInfo.getHumidity() + "%");
+                txtWind.setText(String.format(
+                        Locale.getDefault(),
+                        "%.1f%s",
+                        weatherInfo.getWindSpeed(),
+                        WeatherPreferences.getWindSpeedSuffix(DetailActivity.this)
+                ));
+            }
 
-        RequestQueue queue = Volley.newRequestQueue(this);
-        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, url, null,
-                response -> {
-                    try {
-                        // 1. Lấy nhiệt độ và độ ẩm từ object "main"
-                        JSONObject main = response.getJSONObject("main");
-                        double temp = main.getDouble("temp");
-                        int humidity = main.getInt("humidity");
+            @Override
+            public void onError(String message) {
+                showWeatherError(message);
+            }
+        });
+    }
 
-                        // 2. Lấy mô tả thời tiết từ array "weather"
-                        String description = response.getJSONArray("weather")
-                                .getJSONObject(0).getString("description");
-
-                        // 3. Lấy tốc độ gió từ object "wind"
-                        JSONObject wind = response.getJSONObject("wind");
-                        double windSpeed = wind.getDouble("speed");
-
-                        // Cập nhật giao diện
-                        txtDetailTemp.setText(Math.round(temp) + "°C");
-                        txtDetailDesc.setText(description.substring(0, 1).toUpperCase() + description.substring(1));
-                        txtHumidity.setText(humidity + "%");
-                        txtWind.setText(windSpeed + " m/s");
-
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                        Toast.makeText(DetailActivity.this, "Lỗi đọc dữ liệu thời tiết", Toast.LENGTH_SHORT).show();
-                    }
-                },
-                error -> {
-                    Toast.makeText(DetailActivity.this, "Không tìm thấy thông tin hoặc lỗi mạng", Toast.LENGTH_SHORT).show();
-                });
-
-        queue.add(jsonObjectRequest);
+    private void showWeatherError(String message) {
+        txtDetailTemp.setText("--");
+        txtDetailDesc.setText(message);
+        txtHumidity.setText("--%");
+        txtWind.setText("--");
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
 }

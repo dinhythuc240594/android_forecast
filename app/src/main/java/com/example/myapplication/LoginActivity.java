@@ -39,7 +39,6 @@ public class LoginActivity extends AppCompatActivity {
                 Intent intent = new Intent(LoginActivity.this, HomeActivity.class);
 
                 intent.putExtra("email", email);
-                intent.putExtra("pwd", pwd);
 
                 startActivity(intent);
             }

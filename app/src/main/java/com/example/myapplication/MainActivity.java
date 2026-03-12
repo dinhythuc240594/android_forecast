@@ -2,161 +2,341 @@ package com.example.myapplication;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
-import android.content.pm.PackageManager;
+import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.location.Location;
+import android.location.LocationManager;
 import android.os.Bundle;
-import android.util.Log;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.View;
-
 import android.widget.Button;
-
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-
 import androidx.core.app.ActivityCompat;
-import com.android.volley.Request;
-import com.android.volley.RequestQueue;
-import com.android.volley.toolbox.JsonObjectRequest;
-import com.android.volley.toolbox.StringRequest;
-import com.android.volley.toolbox.Volley;
+import androidx.core.location.LocationManagerCompat;
 
-import org.json.JSONException;
-import org.json.JSONObject;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.Priority;
+import com.google.android.gms.tasks.CancellationTokenSource;
+import com.google.android.material.progressindicator.LinearProgressIndicator;
+
+import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
 
-    private String msg = "";
-    private TextView txtCity, txtTemp, txtDesc;
-    private Button btnGoToList, btnSettings;
-    private FusedLocationProviderClient fusedLocationClient;
-
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 100;
-    private static final String API_KEY = "35cb8751251c30622d255e40d059e07b"; // Replace with your OpenWeatherMap API Key
+    private static final String WEATHER_REQUEST_TAG = "main_weather";
+    private static final long LOCATION_TIMEOUT_MS = 10000L;
+    private static final String DEFAULT_CITY = "Hanoi";
+
+    private TextView txtStatus;
+    private TextView txtCity;
+    private TextView txtTemp;
+    private TextView txtDesc;
+    private TextView txtHelper;
+    private TextView txtHumidityValue;
+    private TextView txtWindValue;
+    private Button btnRefresh;
+    private LinearProgressIndicator progressLoading;
+    private FusedLocationProviderClient fusedLocationClient;
+    private WeatherRepository weatherRepository;
+    private Location lastKnownLocation;
+    private String currentUnit;
+    private String currentLanguage;
+    private boolean showingFallbackCity;
+    private CancellationTokenSource locationCancellationTokenSource;
+    private final Handler mainHandler = new Handler(Looper.getMainLooper());
+    private final Runnable locationTimeoutRunnable = this::handleLocationTimeout;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
-
+        LanguageHelper.applySavedLanguage(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().hide();
+        }
 
+        txtStatus = findViewById(R.id.txtStatus);
         txtCity = findViewById(R.id.txtCity);
         txtTemp = findViewById(R.id.txtTemp);
         txtDesc = findViewById(R.id.txtDesc);
-        btnGoToList = findViewById(R.id.btnGoToList);
-        btnSettings = findViewById(R.id.btnSettings);
+        txtHelper = findViewById(R.id.txtHelper);
+        txtHumidityValue = findViewById(R.id.txtHumidityValue);
+        txtWindValue = findViewById(R.id.txtWindValue);
+        btnRefresh = findViewById(R.id.btnRefresh);
+        progressLoading = findViewById(R.id.progressLoading);
+        Button btnGoToList = findViewById(R.id.btnGoToList);
+        Button btnSettings = findViewById(R.id.btnSettings);
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-
-        getLocation();
+        weatherRepository = new WeatherRepository(this);
+        currentUnit = WeatherPreferences.getUnit(this);
+        currentLanguage = LanguageHelper.getCurrentLanguage(this);
 
         btnGoToList.setOnClickListener(v ->
                 startActivity(new Intent(MainActivity.this, CityListActivity.class)));
 
         btnSettings.setOnClickListener(v ->
                 startActivity(new Intent(MainActivity.this, SettingsActivity.class)));
-    }
 
-    private void fetchWeatherData(double lat, double lon) {
-        String url = "https://api.openweathermap.org/data/2.5/weather?lat=" + lat +
-                "&lon=" + lon + "&appid=" + API_KEY + "&units=metric&lang=vi";
-
-        RequestQueue queue = Volley.newRequestQueue(this);
-        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, url, null,
-                response -> {
-                    try {
-                        // Lấy tên thành phố
-                        String cityName = response.getString("name");
-
-                        // Lấy nhiệt độ từ object "main"
-                        JSONObject main = response.getJSONObject("main");
-                        double temp = main.getDouble("temp");
-
-                        // Lấy mô tả từ array "weather"
-                        String description = response.getJSONArray("weather")
-                                .getJSONObject(0).getString("description");
-
-                        // Hiển thị lên giao diện
-                        txtCity.setText(cityName);
-                        txtTemp.setText(Math.round(temp) + "°C");
-                        txtDesc.setText(description.substring(0, 1).toUpperCase() + description.substring(1));
-
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-                },
-                error -> Toast.makeText(MainActivity.this, "Lỗi kết nối API", Toast.LENGTH_SHORT).show());
-
-        queue.add(jsonObjectRequest);
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == 100 && grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            getLocation();
-        }
-    }
-
-    private void getLocation() {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 100);
-            return;
-        }
-
-        fusedLocationClient.getLastLocation().addOnSuccessListener(this, location -> {
-            if (location != null) {
-                fetchWeatherData(location.getLatitude(), location.getLongitude());
+        btnRefresh.setOnClickListener(v -> {
+            if (WeatherRepository.hasApiKey()) {
+                getLocation();
             } else {
-                txtCity.setText("Không thể lấy vị trí GPS");
+                showMissingApiKey();
             }
         });
-    }
 
-    @Override
-    protected void onStart() {
-        super.onStart();
-        Log.d(msg, "The onStart() event");
+        if (WeatherRepository.hasApiKey()) {
+            getLocation();
+        } else {
+            showMissingApiKey();
+        }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        Log.d(msg, "The onResume() event");
+        String selectedUnit = WeatherPreferences.getUnit(this);
+        String selectedLanguage = LanguageHelper.getCurrentLanguage(this);
+        if (!selectedUnit.equals(currentUnit) || !selectedLanguage.equals(currentLanguage)) {
+            currentUnit = selectedUnit;
+            currentLanguage = selectedLanguage;
+            if (lastKnownLocation != null) {
+                fetchWeatherData(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude());
+            } else if (showingFallbackCity) {
+                fetchFallbackWeather(false, null);
+            }
+        }
     }
 
-    /** Called when another activity is taking focus. */
-    @Override
-    protected void onPause() {
-        super.onPause();
-        Log.d(msg, "The onPause() event");
-    }
-
-    /** Called when the activity is no longer visible. */
     @Override
     protected void onStop() {
         super.onStop();
-        Log.d(msg, "The onStop() event");
+        weatherRepository.cancel(WEATHER_REQUEST_TAG);
+        cancelLocationTimeout();
     }
 
-    /** Called just before the activity is destroyed. */
+    private void fetchWeatherData(double lat, double lon) {
+        currentUnit = WeatherPreferences.getUnit(this);
+        weatherRepository.cancel(WEATHER_REQUEST_TAG);
+        showLoadingState(
+                R.string.main_status_loading_weather,
+                getString(R.string.main_loading_city),
+                R.string.main_helper_syncing
+        );
+
+        weatherRepository.fetchWeatherByCoordinates(lat, lon, currentUnit, WEATHER_REQUEST_TAG, new WeatherRepository.WeatherCallback() {
+            @Override
+            public void onSuccess(WeatherInfo weatherInfo) {
+                showingFallbackCity = false;
+                updateWeatherUi(weatherInfo);
+            }
+
+            @Override
+            public void onError(String message) {
+                showWeatherError(message);
+            }
+        });
+    }
+
     @Override
-    public void onDestroy() {
-        super.onDestroy();
-        Log.d(msg, "The onDestroy() event");
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
+            if (hasGrantedLocationPermission(grantResults)) {
+                getLocation();
+            } else {
+                fetchFallbackWeather(true, getString(R.string.main_message_permission_denied));
+            }
+        }
     }
 
-    public void startServ(View view){
-        startService(new Intent(getBaseContext(), MyService.class));
+    private void getLocation() {
+        if (!hasLocationPermission()) {
+            ActivityCompat.requestPermissions(
+                    this,
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION},
+                    LOCATION_PERMISSION_REQUEST_CODE
+            );
+            return;
+        }
+
+        if (!isLocationEnabled()) {
+            fetchFallbackWeather(true, getString(R.string.main_message_location_disabled));
+            return;
+        }
+
+        showLoadingState(
+                R.string.main_status_loading_location,
+                getString(R.string.main_loading_city),
+                R.string.main_helper_locating
+        );
+        startLocationTimeout();
+        fusedLocationClient.getLastLocation()
+                .addOnSuccessListener(this, location -> {
+                    if (location != null) {
+                        handleLocationSuccess(location);
+                    } else {
+                        requestCurrentLocation();
+                    }
+                })
+                .addOnFailureListener(exception ->
+                        fetchFallbackWeather(true, getString(R.string.main_message_location_unavailable)));
     }
 
-    public void stopServ(View view){
-        stopService(new Intent(getBaseContext(), MyService.class));
+    @SuppressLint("MissingPermission")
+    private void requestCurrentLocation() {
+        locationCancellationTokenSource = new CancellationTokenSource();
+        fusedLocationClient.getCurrentLocation(
+                        Priority.PRIORITY_HIGH_ACCURACY,
+                        locationCancellationTokenSource.getToken()
+                )
+                .addOnSuccessListener(this, location -> {
+                    if (location != null) {
+                        handleLocationSuccess(location);
+                    } else {
+                        fetchFallbackWeather(true, getString(R.string.main_message_gps_unavailable));
+                    }
+                })
+                .addOnFailureListener(exception ->
+                        fetchFallbackWeather(true, getString(R.string.main_message_location_unavailable)));
     }
 
+    private void handleLocationSuccess(Location location) {
+        cancelLocationTimeout();
+        showingFallbackCity = false;
+        lastKnownLocation = location;
+        fetchWeatherData(location.getLatitude(), location.getLongitude());
+    }
+
+    private void fetchFallbackWeather(boolean shouldShowToast, @Nullable String message) {
+        cancelLocationTimeout();
+        lastKnownLocation = null;
+        showingFallbackCity = true;
+        currentUnit = WeatherPreferences.getUnit(this);
+        weatherRepository.cancel(WEATHER_REQUEST_TAG);
+
+        if (shouldShowToast && message != null) {
+            Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+        }
+
+        showLoadingState(
+                R.string.main_status_fallback,
+                getString(R.string.main_loading_fallback_city),
+                R.string.main_helper_fallback
+        );
+
+        weatherRepository.fetchWeatherByCity(DEFAULT_CITY, currentUnit, WEATHER_REQUEST_TAG, new WeatherRepository.WeatherCallback() {
+            @Override
+            public void onSuccess(WeatherInfo weatherInfo) {
+                showingFallbackCity = true;
+                updateWeatherUi(weatherInfo);
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                showWeatherError(errorMessage);
+            }
+        });
+    }
+
+    private void startLocationTimeout() {
+        cancelLocationTimeout();
+        mainHandler.postDelayed(locationTimeoutRunnable, LOCATION_TIMEOUT_MS);
+    }
+
+    private void cancelLocationTimeout() {
+        mainHandler.removeCallbacks(locationTimeoutRunnable);
+        if (locationCancellationTokenSource != null) {
+            locationCancellationTokenSource.cancel();
+            locationCancellationTokenSource = null;
+        }
+    }
+
+    private void handleLocationTimeout() {
+        fetchFallbackWeather(true, getString(R.string.main_message_location_timeout));
+    }
+
+    private boolean hasLocationPermission() {
+        return ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                || ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED;
+    }
+
+    private boolean hasGrantedLocationPermission(int[] grantResults) {
+        for (int grantResult : grantResults) {
+            if (grantResult == PackageManager.PERMISSION_GRANTED) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isLocationEnabled() {
+        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        return locationManager != null && LocationManagerCompat.isLocationEnabled(locationManager);
+    }
+
+    private void showLoadingState(int statusResId, String cityText, int helperResId) {
+        txtStatus.setText(statusResId);
+        txtCity.setText(cityText);
+        txtTemp.setText("--");
+        txtDesc.setText(R.string.main_weather_placeholder);
+        txtHelper.setText(helperResId);
+        txtHumidityValue.setText("--%");
+        txtWindValue.setText("--");
+        progressLoading.setVisibility(View.VISIBLE);
+        btnRefresh.setEnabled(false);
+    }
+
+    private void updateWeatherUi(WeatherInfo weatherInfo) {
+        txtStatus.setText(showingFallbackCity ? R.string.main_status_fallback : R.string.main_status_current_location);
+        txtCity.setText(weatherInfo.getCityName());
+        txtTemp.setText(Math.round(weatherInfo.getTemperature()) + WeatherPreferences.getTemperatureUnitSymbol(this));
+        txtDesc.setText(weatherInfo.getDescription());
+        txtHelper.setText(showingFallbackCity ? R.string.main_helper_fallback : R.string.main_helper_current_location);
+        txtHumidityValue.setText(weatherInfo.getHumidity() + "%");
+        txtWindValue.setText(String.format(
+                Locale.getDefault(),
+                "%.1f%s",
+                weatherInfo.getWindSpeed(),
+                WeatherPreferences.getWindSpeedSuffix(this)
+        ));
+        progressLoading.setVisibility(View.GONE);
+        btnRefresh.setEnabled(true);
+    }
+
+    private void showMissingApiKey() {
+        txtStatus.setText(R.string.main_status_missing_config);
+        txtCity.setText(R.string.main_status_missing_config);
+        txtTemp.setText("--");
+        txtDesc.setText(R.string.main_helper_missing_api_key);
+        txtHelper.setText(R.string.main_helper_missing_api_key);
+        txtHumidityValue.setText("--%");
+        txtWindValue.setText("--");
+        progressLoading.setVisibility(View.GONE);
+        btnRefresh.setEnabled(false);
+        Toast.makeText(this, R.string.main_message_missing_api_key, Toast.LENGTH_LONG).show();
+    }
+
+    private void showWeatherError(String message) {
+        txtStatus.setText(R.string.main_status_error);
+        txtCity.setText(R.string.main_status_error);
+        txtTemp.setText("--");
+        txtDesc.setText(message);
+        txtHelper.setText(R.string.main_helper_retry);
+        txtHumidityValue.setText("--%");
+        txtWindValue.setText("--");
+        progressLoading.setVisibility(View.GONE);
+        btnRefresh.setEnabled(true);
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+    }
 }

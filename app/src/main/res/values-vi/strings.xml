@@ -20,7 +20,7 @@
     <string name="main_helper_current_location">Dữ liệu thời tiết được cập nhật theo vị trí hiện tại của bạn.</string>
     <string name="main_helper_fallback">Không lấy được vị trí, đang hiển thị thời tiết cho địa điểm mặc định.</string>
     <string name="main_helper_missing_api_key">Hãy thêm WEATHER_API_KEY vào local.properties để tải dữ liệu thời tiết.</string>
-    <string name="main_helper_retry">Hãy kiểm tra mạng hoặc bấm Làm mới để thử lại.</string>
+    <string name="main_helper_retry">Hãy kiểm tra mạng hoặc kéo xuống để làm mới.</string>
     <string name="main_label_humidity">Độ ẩm</string>
     <string name="main_label_wind">Gió</string>
     <string name="main_action_city_list">Xem danh sách tỉnh thành</string>
@@ -59,4 +59,12 @@
     <string name="weather_error_generic">Không thể tải dữ liệu thời tiết lúc này.</string>
     <string name="weather_no_description">Không có mô tả</string>
     <string name="weather_unknown_location">Không rõ vị trí</string>
+    <string name="main_forecast_hourly_title">Theo giờ</string>
+    <string name="main_forecast_daily_title">Theo ngày</string>
+    <string name="main_forecast_today">Hôm nay</string>
+    <string name="main_forecast_tomorrow">Ngày mai</string>
+    <string name="main_forecast_hourly_summary_fmt">%1$s · Thấp %2$d%3$s</string>
+    <string name="main_forecast_rain_symbol" translatable="false">💧</string>
+    <string name="main_forecast_icon_day_cd">Thời tiết ban ngày</string>
+    <string name="main_forecast_icon_night_cd">Thời tiết ban đêm</string>
 </resources>

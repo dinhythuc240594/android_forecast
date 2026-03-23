@@ -19,7 +19,11 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.core.location.LocationManagerCompat;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
@@ -27,12 +31,15 @@ import com.google.android.gms.location.Priority;
 import com.google.android.gms.tasks.CancellationTokenSource;
 import com.google.android.material.progressindicator.LinearProgressIndicator;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
 
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 100;
     private static final String WEATHER_REQUEST_TAG = "main_weather";
+    private static final String FORECAST_REQUEST_TAG = "main_forecast";
     private static final long LOCATION_TIMEOUT_MS = 10000L;
     private static final String DEFAULT_CITY = "Hanoi";
 
@@ -43,8 +50,16 @@ public class MainActivity extends AppCompatActivity {
     private TextView txtHelper;
     private TextView txtHumidityValue;
     private TextView txtWindValue;
-    private Button btnRefresh;
+    private SwipeRefreshLayout swipeRefresh;
     private LinearProgressIndicator progressLoading;
+    private View layoutForecastSections;
+    private TextView txtHourlySummary;
+    private RecyclerView rvHourly;
+    private RecyclerView rvDaily;
+    private final List<HourlyForecast> hourlyForecastItems = new ArrayList<>();
+    private final List<DailyForecast> dailyForecastItems = new ArrayList<>();
+    private HourlyForecastAdapter hourlyForecastAdapter;
+    private DailyForecastAdapter dailyForecastAdapter;
     private FusedLocationProviderClient fusedLocationClient;
     private WeatherRepository weatherRepository;
     private Location lastKnownLocation;
@@ -71,8 +86,27 @@ public class MainActivity extends AppCompatActivity {
         txtHelper = findViewById(R.id.txtHelper);
         txtHumidityValue = findViewById(R.id.txtHumidityValue);
         txtWindValue = findViewById(R.id.txtWindValue);
-        btnRefresh = findViewById(R.id.btnRefresh);
+        swipeRefresh = findViewById(R.id.swipeRefresh);
         progressLoading = findViewById(R.id.progressLoading);
+        layoutForecastSections = findViewById(R.id.layoutForecastSections);
+        txtHourlySummary = findViewById(R.id.txtHourlySummary);
+        rvHourly = findViewById(R.id.rvHourly);
+        rvDaily = findViewById(R.id.rvDaily);
+
+        hourlyForecastAdapter = new HourlyForecastAdapter(hourlyForecastItems);
+        rvHourly.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+        rvHourly.setAdapter(hourlyForecastAdapter);
+        rvHourly.setHasFixedSize(true);
+
+        dailyForecastAdapter = new DailyForecastAdapter(dailyForecastItems);
+        rvDaily.setLayoutManager(new LinearLayoutManager(this));
+        rvDaily.setAdapter(dailyForecastAdapter);
+
+        swipeRefresh.setColorSchemeColors(
+                ContextCompat.getColor(this, R.color.purple_700),
+                ContextCompat.getColor(this, R.color.teal_200));
+        swipeRefresh.setProgressBackgroundColorSchemeResource(R.color.white);
+        swipeRefresh.setOnRefreshListener(this::performRefresh);
         Button btnGoToList = findViewById(R.id.btnGoToList);
         Button btnSettings = findViewById(R.id.btnSettings);
 
@@ -86,14 +120,6 @@ public class MainActivity extends AppCompatActivity {
 
         btnSettings.setOnClickListener(v ->
                 startActivity(new Intent(MainActivity.this, SettingsActivity.class)));
-
-        btnRefresh.setOnClickListener(v -> {
-            if (WeatherRepository.hasApiKey()) {
-                getLocation();
-            } else {
-                showMissingApiKey();
-            }
-        });
 
         if (WeatherRepository.hasApiKey()) {
             getLocation();
@@ -122,7 +148,21 @@ public class MainActivity extends AppCompatActivity {
     protected void onStop() {
         super.onStop();
         weatherRepository.cancel(WEATHER_REQUEST_TAG);
+        weatherRepository.cancel(FORECAST_REQUEST_TAG);
         cancelLocationTimeout();
+        swipeRefresh.setRefreshing(false);
+    }
+
+    private void performRefresh() {
+        if (!WeatherRepository.hasApiKey()) {
+            swipeRefresh.setRefreshing(false);
+            showMissingApiKey();
+            return;
+        }
+        if (!swipeRefresh.isRefreshing()) {
+            swipeRefresh.setRefreshing(true);
+        }
+        getLocation();
     }
 
     private void fetchWeatherData(double lat, double lon) {
@@ -162,6 +202,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void getLocation() {
         if (!hasLocationPermission()) {
+            swipeRefresh.setRefreshing(false);
             ActivityCompat.requestPermissions(
                     this,
                     new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION},
@@ -294,7 +335,7 @@ public class MainActivity extends AppCompatActivity {
         txtHumidityValue.setText("--%");
         txtWindValue.setText("--");
         progressLoading.setVisibility(View.VISIBLE);
-        btnRefresh.setEnabled(false);
+        clearForecastUi();
     }
 
     private void updateWeatherUi(WeatherInfo weatherInfo) {
@@ -311,7 +352,8 @@ public class MainActivity extends AppCompatActivity {
                 WeatherPreferences.getWindSpeedSuffix(this)
         ));
         progressLoading.setVisibility(View.GONE);
-        btnRefresh.setEnabled(true);
+        swipeRefresh.setRefreshing(false);
+        loadForecastAfterCurrentWeather(weatherInfo);
     }
 
     private void showMissingApiKey() {
@@ -323,7 +365,8 @@ public class MainActivity extends AppCompatActivity {
         txtHumidityValue.setText("--%");
         txtWindValue.setText("--");
         progressLoading.setVisibility(View.GONE);
-        btnRefresh.setEnabled(false);
+        swipeRefresh.setRefreshing(false);
+        clearForecastUi();
         Toast.makeText(this, R.string.main_message_missing_api_key, Toast.LENGTH_LONG).show();
     }
 
@@ -336,7 +379,74 @@ public class MainActivity extends AppCompatActivity {
         txtHumidityValue.setText("--%");
         txtWindValue.setText("--");
         progressLoading.setVisibility(View.GONE);
-        btnRefresh.setEnabled(true);
+        swipeRefresh.setRefreshing(false);
+        clearForecastUi();
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+    }
+
+    private void clearForecastUi() {
+        weatherRepository.cancel(FORECAST_REQUEST_TAG);
+        layoutForecastSections.setVisibility(View.GONE);
+        hourlyForecastItems.clear();
+        dailyForecastItems.clear();
+        hourlyForecastAdapter.notifyDataSetChanged();
+        dailyForecastAdapter.notifyDataSetChanged();
+        txtHourlySummary.setText("");
+    }
+
+    private void loadForecastAfterCurrentWeather(WeatherInfo weatherInfo) {
+        weatherRepository.cancel(FORECAST_REQUEST_TAG);
+        layoutForecastSections.setVisibility(View.VISIBLE);
+        String unitSymbol = WeatherPreferences.getTemperatureUnitSymbol(this);
+        txtHourlySummary.setText(getString(
+                R.string.main_forecast_hourly_summary_fmt,
+                weatherInfo.getDescription(),
+                (int) Math.round(weatherInfo.getTemperature()),
+                unitSymbol
+        ));
+        String unit = WeatherPreferences.getUnit(this);
+        WeatherRepository.ForecastCallback callback = new WeatherRepository.ForecastCallback() {
+            @Override
+            public void onSuccess(ForecastResult result) {
+                applyForecastResult(weatherInfo, result);
+            }
+
+            @Override
+            public void onError(String message) {
+                // Giữ dự báo cũ nếu có; không làm gián đoạn luồng chính
+            }
+        };
+        if (weatherInfo.hasCoordinates()) {
+            weatherRepository.fetchForecastByCoordinates(
+                    weatherInfo.getLatitude(),
+                    weatherInfo.getLongitude(),
+                    unit,
+                    FORECAST_REQUEST_TAG,
+                    callback
+            );
+        } else {
+            weatherRepository.fetchForecastByCity(
+                    weatherInfo.getCityName(),
+                    unit,
+                    FORECAST_REQUEST_TAG,
+                    callback
+            );
+        }
+    }
+
+    private void applyForecastResult(WeatherInfo weatherInfo, ForecastResult result) {
+        String sym = WeatherPreferences.getTemperatureUnitSymbol(this);
+        txtHourlySummary.setText(getString(
+                R.string.main_forecast_hourly_summary_fmt,
+                weatherInfo.getDescription(),
+                result.hourlyMinTempRounded(),
+                sym
+        ));
+        hourlyForecastItems.clear();
+        hourlyForecastItems.addAll(result.getHourly());
+        hourlyForecastAdapter.notifyDataSetChanged();
+        dailyForecastItems.clear();
+        dailyForecastItems.addAll(result.getDaily());
+        dailyForecastAdapter.notifyDataSetChanged();
     }
 }

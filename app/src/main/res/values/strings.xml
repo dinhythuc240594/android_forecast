@@ -22,7 +22,7 @@
     <string name="main_helper_current_location">Weather data updated from your current location.</string>
     <string name="main_helper_fallback">Location is unavailable, showing weather for the default city.</string>
     <string name="main_helper_missing_api_key">Add WEATHER_API_KEY to local.properties to load weather data.</string>
-    <string name="main_helper_retry">Check your network or tap Refresh to try again.</string>
+    <string name="main_helper_retry">Check your network or pull down to refresh.</string>
     <string name="main_label_humidity">Humidity</string>
     <string name="main_label_wind">Wind</string>
     <string name="main_action_city_list">Browse cities</string>
@@ -61,4 +61,12 @@
     <string name="weather_error_generic">Unable to load weather data right now.</string>
     <string name="weather_no_description">No description available</string>
     <string name="weather_unknown_location">Unknown location</string>
+    <string name="main_forecast_hourly_title">Hourly</string>
+    <string name="main_forecast_daily_title">Daily</string>
+    <string name="main_forecast_today">Today</string>
+    <string name="main_forecast_tomorrow">Tomorrow</string>
+    <string name="main_forecast_hourly_summary_fmt">%1$s · Low %2$d%3$s</string>
+    <string name="main_forecast_rain_symbol" translatable="false">💧</string>
+    <string name="main_forecast_icon_day_cd">Daytime conditions</string>
+    <string name="main_forecast_icon_night_cd">Night conditions</string>
 </resources>

@@ -2,11 +2,14 @@ package com.example.myapplication;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.widget.Button;
+import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.progressindicator.LinearProgressIndicator;
 
 import java.util.Locale;
 
@@ -15,6 +18,7 @@ public class DetailActivity extends AppCompatActivity {
     private static final String WEATHER_REQUEST_TAG = "detail_weather";
 
     private TextView txtDetailCity, txtDetailTemp, txtDetailDesc, txtHumidity, txtWind;
+    private LinearProgressIndicator progressDetailLoading;
     private WeatherRepository weatherRepository;
     private String cityName;
     private String currentUnit;
@@ -32,7 +36,8 @@ public class DetailActivity extends AppCompatActivity {
         txtDetailDesc = findViewById(R.id.txtDetailDesc);
         txtHumidity = findViewById(R.id.txtHumidity);
         txtWind = findViewById(R.id.txtWind);
-        Button btnBack = findViewById(R.id.btnBack);
+        MaterialButton btnBack = findViewById(R.id.btnBack);
+        progressDetailLoading = findViewById(R.id.progressDetailLoading);
         weatherRepository = new WeatherRepository(this);
         currentUnit = WeatherPreferences.getUnit(this);
         currentLanguage = LanguageHelper.getCurrentLanguage(this);
@@ -72,14 +77,17 @@ public class DetailActivity extends AppCompatActivity {
     protected void onStop() {
         super.onStop();
         weatherRepository.cancel(WEATHER_REQUEST_TAG);
+        progressDetailLoading.setVisibility(View.GONE);
     }
 
     private void fetchWeatherDetails(String cityName) {
         currentUnit = WeatherPreferences.getUnit(this);
         txtDetailDesc.setText(R.string.detail_loading);
+        progressDetailLoading.setVisibility(View.VISIBLE);
         weatherRepository.fetchWeatherByCity(cityName, currentUnit, WEATHER_REQUEST_TAG, new WeatherRepository.WeatherCallback() {
             @Override
             public void onSuccess(WeatherInfo weatherInfo) {
+                progressDetailLoading.setVisibility(View.GONE);
                 txtDetailCity.setText(weatherInfo.getCityName());
                 txtDetailTemp.setText(Math.round(weatherInfo.getTemperature()) + WeatherPreferences.getTemperatureUnitSymbol(DetailActivity.this));
                 txtDetailDesc.setText(weatherInfo.getDescription());
@@ -94,12 +102,14 @@ public class DetailActivity extends AppCompatActivity {
 
             @Override
             public void onError(String message) {
+                progressDetailLoading.setVisibility(View.GONE);
                 showWeatherError(message);
             }
         });
     }
 
     private void showWeatherError(String message) {
+        progressDetailLoading.setVisibility(View.GONE);
         txtDetailTemp.setText("--");
         txtDetailDesc.setText(message);
         txtHumidity.setText("--%");

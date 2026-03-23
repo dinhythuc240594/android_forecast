@@ -1,104 +1,211 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#E3F2FD"
-    android:gravity="center_horizontal"
-    android:orientation="vertical"
-    android:padding="24dp">
+    android:fitsSystemWindows="true"
+    tools:context=".DetailActivity">
 
-    <Button
-        android:id="@+id/btnBack"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="start"
-        android:layout_marginBottom="20dp"
-        android:text="@string/detail_back" />
+    <ImageView
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:contentDescription="@null"
+        android:scaleType="centerCrop"
+        android:src="@drawable/background"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
-    <TextView
-        android:id="@+id/txtDetailCity"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/detail_city_placeholder"
-        android:textColor="#1565C0"
-        android:textSize="32sp"
-        android:textStyle="bold" />
+    <View
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="@color/home_scrim"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
-    <TextView
-        android:id="@+id/txtDetailTemp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="--°C"
-        android:textSize="64sp"
-        android:textStyle="bold"
-        android:textColor="#000000"
-        android:layout_marginTop="16dp" />
-
-    <TextView
-        android:id="@+id/txtDetailDesc"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="40dp"
-        android:text="@string/detail_desc_placeholder"
-        android:textColor="#555555"
-        android:textSize="20sp" />
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:weightSum="2"
-        android:background="#FFFFFF"
-        android:padding="16dp"
-        android:elevation="4dp">
+    <ScrollView
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:clipToPadding="false"
+        android:fillViewport="true"
+        android:overScrollMode="never"
+        android:paddingStart="20dp"
+        android:paddingTop="16dp"
+        android:paddingEnd="20dp"
+        android:paddingBottom="24dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
 
         <LinearLayout
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:gravity="center">
+            android:orientation="vertical">
 
-            <TextView
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnBack"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/main_label_humidity"
-                android:textColor="#888888"
-                android:textSize="16sp" />
+                android:layout_gravity="start"
+                android:layout_marginBottom="8dp"
+                android:contentDescription="@string/detail_back"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:minHeight="48dp"
+                android:text="@string/detail_back"
+                android:textAllCaps="false"
+                android:textColor="@color/white"
+                app:backgroundTint="#14FFFFFF"
+                app:cornerRadius="18dp"
+                app:strokeColor="@color/home_card_stroke"
+                app:strokeWidth="1dp" />
 
-            <TextView
-                android:id="@+id/txtHumidity"
-                android:layout_width="wrap_content"
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="--%"
-                android:textSize="20sp"
-                android:textStyle="bold"
-                android:textColor="#333333" />
+                app:cardBackgroundColor="@color/home_card_surface"
+                app:cardCornerRadius="28dp"
+                app:cardElevation="0dp"
+                app:strokeColor="@color/home_card_stroke"
+                app:strokeWidth="1dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="24dp">
+
+                    <TextView
+                        android:id="@+id/txtDetailCity"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/detail_city_placeholder"
+                        android:textColor="@color/home_title_text"
+                        android:textSize="28sp"
+                        android:textStyle="bold"
+                        tools:text="Hà Nội" />
+
+                    <TextView
+                        android:id="@+id/txtDetailTemp"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:text="--°C"
+                        android:textColor="@color/home_title_text"
+                        android:textSize="56sp"
+                        android:textStyle="bold"
+                        tools:text="28°C" />
+
+                    <TextView
+                        android:id="@+id/txtDetailDesc"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:lineSpacingMultiplier="1.15"
+                        android:text="@string/detail_desc_placeholder"
+                        android:textColor="@color/home_body_text"
+                        android:textSize="18sp"
+                        tools:text="Nhiều mây" />
+
+                    <com.google.android.material.progressindicator.LinearProgressIndicator
+                        android:id="@+id/progressDetailLoading"
+                        style="@style/Widget.MaterialComponents.LinearProgressIndicator"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:indeterminate="true"
+                        android:visibility="gone"
+                        app:indicatorColor="@color/purple_700"
+                        app:trackColor="@color/home_progress_track"
+                        tools:visibility="visible" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="20dp"
+                        android:baselineAligned="false"
+                        android:orientation="horizontal">
+
+                        <com.google.android.material.card.MaterialCardView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            app:cardBackgroundColor="@color/home_metric_surface"
+                            app:cardCornerRadius="20dp"
+                            app:cardElevation="0dp">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:padding="16dp">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/main_label_humidity"
+                                    android:textColor="@color/home_caption_text"
+                                    android:textSize="13sp" />
+
+                                <TextView
+                                    android:id="@+id/txtHumidity"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="8dp"
+                                    android:text="--%"
+                                    android:textColor="@color/home_title_text"
+                                    android:textSize="22sp"
+                                    android:textStyle="bold"
+                                    tools:text="74%" />
+                            </LinearLayout>
+                        </com.google.android.material.card.MaterialCardView>
+
+                        <View
+                            android:layout_width="12dp"
+                            android:layout_height="1dp" />
+
+                        <com.google.android.material.card.MaterialCardView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            app:cardBackgroundColor="@color/home_metric_surface"
+                            app:cardCornerRadius="20dp"
+                            app:cardElevation="0dp">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:padding="16dp">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/main_label_wind"
+                                    android:textColor="@color/home_caption_text"
+                                    android:textSize="13sp" />
+
+                                <TextView
+                                    android:id="@+id/txtWind"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="8dp"
+                                    android:text="-- m/s"
+                                    android:textColor="@color/home_title_text"
+                                    android:textSize="22sp"
+                                    android:textStyle="bold"
+                                    tools:text="3.4 m/s" />
+                            </LinearLayout>
+                        </com.google.android.material.card.MaterialCardView>
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
         </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:gravity="center">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/main_label_wind"
-                android:textColor="#888888"
-                android:textSize="16sp" />
-
-            <TextView
-                android:id="@+id/txtWind"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="-- m/s"
-                android:textSize="20sp"
-                android:textStyle="bold"
-                android:textColor="#333333" />
-        </LinearLayout>
-
-    </LinearLayout>
-</LinearLayout>
+    </ScrollView>
+</androidx.constraintlayout.widget.ConstraintLayout>

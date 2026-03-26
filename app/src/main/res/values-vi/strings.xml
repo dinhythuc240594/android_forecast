@@ -52,6 +52,8 @@
     <string name="detail_missing_city">Không nhận được tên thành phố.</string>
     <string name="detail_missing_api_key">Thiếu WEATHER_API_KEY trong local.properties.</string>
     <string name="city_list_title">Chọn tỉnh/thành phố</string>
+    <string name="city_list_subtitle">Chọn một địa điểm để xem dự báo chi tiết.</string>
+    <string name="city_list_item_cd_city">Xem thời tiết %1$s</string>
     <string name="weather_error_parse">Không thể đọc dữ liệu thời tiết.</string>
     <string name="weather_error_invalid_key">API key không hợp lệ hoặc đã hết hạn.</string>
     <string name="weather_error_connection">Không thể kết nối tới máy chủ thời tiết.</string>

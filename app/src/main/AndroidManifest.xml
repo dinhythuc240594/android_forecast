@@ -19,7 +19,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".CityListActivity" />
+        <activity
+            android:name=".CityListActivity"
+            android:theme="@style/Theme.MyApplication.NoActionBar" />
         <activity android:name=".DetailActivity" />
         <activity android:name=".SettingsActivity" />
         <service android:name=".MyService" />

@@ -36,8 +36,9 @@ public class CityAdapter extends RecyclerView.Adapter<CityAdapter.CityViewHolder
     public void onBindViewHolder(@NonNull CityViewHolder holder, int position) {
         String city = cityList.get(position);
         holder.txtCityName.setText(city);
+        holder.itemView.setContentDescription(
+                holder.itemView.getContext().getString(R.string.city_list_item_cd_city, city));
 
-        // Bắt sự kiện click vào item
         holder.itemView.setOnClickListener(v -> {
             if (listener != null) {
                 listener.onItemClick(city);

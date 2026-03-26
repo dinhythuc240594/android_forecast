@@ -23,8 +23,14 @@ public final class LanguageHelper {
         }
 
         String normalizedLanguage = normalizeLanguage(savedLanguage);
-        String currentTags = AppCompatDelegate.getApplicationLocales().toLanguageTags();
-        if (!normalizedLanguage.equals(currentTags)) {
+        // Compare base language codes — toLanguageTags() is often "vi-VN" / "en-US" while prefs store "vi" / "en".
+        // Mismatch caused setApplicationLocales() on every Activity start → repeated recreate and ANRs.
+        LocaleListCompat appLocales = AppCompatDelegate.getApplicationLocales();
+        String currentLanguage = "";
+        if (!appLocales.isEmpty() && appLocales.get(0) != null) {
+            currentLanguage = normalizeLanguage(appLocales.get(0).getLanguage());
+        }
+        if (!normalizedLanguage.equals(currentLanguage)) {
             AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(normalizedLanguage));
         }
     }

@@ -52,6 +52,8 @@
     <string name="detail_missing_city">City name was not received.</string>
     <string name="detail_missing_api_key">WEATHER_API_KEY is missing in local.properties.</string>
     <string name="city_list_title">Choose a city</string>
+    <string name="city_list_subtitle">Pick a location to view the full forecast.</string>
+    <string name="city_list_item_cd_city">Open weather for %1$s</string>
     <string name="weather_error_parse">Unable to read weather data.</string>
     <string name="weather_error_invalid_key">API key is invalid or expired.</string>
     <string name="weather_error_connection">Unable to connect to the weather server.</string>

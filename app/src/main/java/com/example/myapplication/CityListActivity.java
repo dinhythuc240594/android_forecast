@@ -5,6 +5,8 @@ import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.google.android.material.appbar.MaterialToolbar;
 import java.util.Arrays;
 import java.util.List;
 
@@ -20,7 +22,16 @@ public class CityListActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_city_list);
 
+        MaterialToolbar toolbar = findViewById(R.id.toolbarCityList);
+        setSupportActionBar(toolbar);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setDisplayShowHomeEnabled(true);
+        }
+        toolbar.setNavigationOnClickListener(v -> getOnBackPressedDispatcher().onBackPressed());
+
         rvCities = findViewById(R.id.rvCities);
+        rvCities.setHasFixedSize(true);
 
         // Chuẩn bị dữ liệu: Danh sách một số tỉnh/thành Việt Nam (API OpenWeather nhận dạng tốt không dấu hoặc tiếng Anh, nhưng tiếng Việt có dấu vẫn dùng được tuỳ query)
         // Mẹo: Nếu API trả về lỗi với tên có dấu, bạn có thể truyền tên không dấu hoặc thêm chữ "Province" đằng sau.

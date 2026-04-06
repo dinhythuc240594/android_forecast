@@ -7,18 +7,31 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.progressindicator.LinearProgressIndicator;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 public class DetailActivity extends AppCompatActivity {
 
     private static final String WEATHER_REQUEST_TAG = "detail_weather";
+    private static final String FORECAST_REQUEST_TAG = "detail_forecast";
 
     private TextView txtDetailCity, txtDetailTemp, txtDetailDesc, txtHumidity, txtWind;
+    private TextView txtHourlySummary;
     private LinearProgressIndicator progressDetailLoading;
+    private View layoutForecastSections;
+    private RecyclerView rvHourly;
+    private RecyclerView rvDaily;
+    private final List<HourlyForecast> hourlyForecastItems = new ArrayList<>();
+    private final List<DailyForecast> dailyForecastItems = new ArrayList<>();
+    private HourlyForecastAdapter hourlyForecastAdapter;
+    private DailyForecastAdapter dailyForecastAdapter;
     private WeatherRepository weatherRepository;
     /** Tên hiển thị (tiếng Việt từ API địa phương hoặc tên người dùng chọn). */
     private String displayCityName;
@@ -33,19 +46,30 @@ public class DetailActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
 
-        // Ánh xạ View
         txtDetailCity = findViewById(R.id.txtDetailCity);
         txtDetailTemp = findViewById(R.id.txtDetailTemp);
         txtDetailDesc = findViewById(R.id.txtDetailDesc);
         txtHumidity = findViewById(R.id.txtHumidity);
         txtWind = findViewById(R.id.txtWind);
+        txtHourlySummary = findViewById(R.id.txtHourlySummary);
+        layoutForecastSections = findViewById(R.id.layoutForecastSections);
+        rvHourly = findViewById(R.id.rvHourly);
+        rvDaily = findViewById(R.id.rvDaily);
         MaterialButton btnBack = findViewById(R.id.btnBack);
         progressDetailLoading = findViewById(R.id.progressDetailLoading);
         weatherRepository = new WeatherRepository(this);
         currentUnit = WeatherPreferences.getUnit(this);
         currentLanguage = LanguageHelper.getCurrentLanguage(this);
 
-        // Nút quay lại màn hình trước
+        hourlyForecastAdapter = new HourlyForecastAdapter(hourlyForecastItems);
+        rvHourly.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+        rvHourly.setAdapter(hourlyForecastAdapter);
+        rvHourly.setHasFixedSize(true);
+
+        dailyForecastAdapter = new DailyForecastAdapter(dailyForecastItems);
+        rvDaily.setLayoutManager(new LinearLayoutManager(this));
+        rvDaily.setAdapter(dailyForecastAdapter);
+
         btnBack.setOnClickListener(v -> finish());
 
         Intent intent = getIntent();
@@ -83,6 +107,7 @@ public class DetailActivity extends AppCompatActivity {
     protected void onStop() {
         super.onStop();
         weatherRepository.cancel(WEATHER_REQUEST_TAG);
+        weatherRepository.cancel(FORECAST_REQUEST_TAG);
         progressDetailLoading.setVisibility(View.GONE);
     }
 
@@ -90,6 +115,7 @@ public class DetailActivity extends AppCompatActivity {
         currentUnit = WeatherPreferences.getUnit(this);
         txtDetailDesc.setText(R.string.detail_loading);
         progressDetailLoading.setVisibility(View.VISIBLE);
+        clearForecastUi();
         weatherRepository.fetchWeatherByCity(weatherQuery, currentUnit, WEATHER_REQUEST_TAG, new WeatherRepository.WeatherCallback() {
             @Override
             public void onSuccess(WeatherInfo weatherInfo) {
@@ -104,6 +130,7 @@ public class DetailActivity extends AppCompatActivity {
                         weatherInfo.getWindSpeed(),
                         WeatherPreferences.getWindSpeedSuffix(DetailActivity.this)
                 ));
+                loadForecastAfterCurrentWeather(weatherInfo);
             }
 
             @Override
@@ -114,12 +141,81 @@ public class DetailActivity extends AppCompatActivity {
         });
     }
 
+    private void clearForecastUi() {
+        weatherRepository.cancel(FORECAST_REQUEST_TAG);
+        layoutForecastSections.setVisibility(View.GONE);
+        hourlyForecastItems.clear();
+        dailyForecastItems.clear();
+        hourlyForecastAdapter.notifyDataSetChanged();
+        dailyForecastAdapter.notifyDataSetChanged();
+        txtHourlySummary.setText("");
+        RecyclerViewHeightHelper.setVerticalListHeightToContent(rvDaily);
+    }
+
+    private void loadForecastAfterCurrentWeather(WeatherInfo weatherInfo) {
+        weatherRepository.cancel(FORECAST_REQUEST_TAG);
+        layoutForecastSections.setVisibility(View.VISIBLE);
+        String unitSymbol = WeatherPreferences.getTemperatureUnitSymbol(this);
+        txtHourlySummary.setText(getString(
+                R.string.main_forecast_hourly_summary_fmt,
+                weatherInfo.getDescription(),
+                (int) Math.round(weatherInfo.getTemperature()),
+                unitSymbol
+        ));
+        String unit = WeatherPreferences.getUnit(this);
+        WeatherRepository.ForecastCallback callback = new WeatherRepository.ForecastCallback() {
+            @Override
+            public void onSuccess(ForecastResult result) {
+                applyForecastResult(weatherInfo, result);
+            }
+
+            @Override
+            public void onError(String message) {
+                // Giữ phần tóm tắt hiện tại; không chặn màn chi tiết
+            }
+        };
+        if (weatherInfo.hasCoordinates()) {
+            weatherRepository.fetchForecastByCoordinates(
+                    weatherInfo.getLatitude(),
+                    weatherInfo.getLongitude(),
+                    unit,
+                    FORECAST_REQUEST_TAG,
+                    callback
+            );
+        } else {
+            weatherRepository.fetchForecastByCity(
+                    weatherInfo.getCityName(),
+                    unit,
+                    FORECAST_REQUEST_TAG,
+                    callback
+            );
+        }
+    }
+
+    private void applyForecastResult(WeatherInfo weatherInfo, ForecastResult result) {
+        String sym = WeatherPreferences.getTemperatureUnitSymbol(this);
+        txtHourlySummary.setText(getString(
+                R.string.main_forecast_hourly_summary_fmt,
+                weatherInfo.getDescription(),
+                result.hourlyMinTempRounded(),
+                sym
+        ));
+        hourlyForecastItems.clear();
+        hourlyForecastItems.addAll(result.getHourly());
+        hourlyForecastAdapter.notifyDataSetChanged();
+        dailyForecastItems.clear();
+        dailyForecastItems.addAll(result.getDaily());
+        dailyForecastAdapter.notifyDataSetChanged();
+        RecyclerViewHeightHelper.setVerticalListHeightToContent(rvDaily);
+    }
+
     private void showWeatherError(String message) {
         progressDetailLoading.setVisibility(View.GONE);
         txtDetailTemp.setText("--");
         txtDetailDesc.setText(message);
         txtHumidity.setText("--%");
         txtWind.setText("--");
+        clearForecastUi();
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
 }

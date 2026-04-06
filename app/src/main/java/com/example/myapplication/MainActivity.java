@@ -12,7 +12,9 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.TypedValue;
 import android.view.View;
+import android.view.ViewParent;
 import android.view.animation.LinearInterpolator;
 import android.widget.Button;
 import android.widget.TextView;
@@ -27,6 +29,7 @@ import androidx.core.location.LocationManagerCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+import androidx.core.widget.NestedScrollView;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
@@ -50,6 +53,7 @@ public class MainActivity extends AppCompatActivity {
 
     private TextView txtStatus;
     private TextView txtCity;
+    private TextView txtCitySticky;
     private TextView txtTemp;
     private TextView txtDesc;
     private TextView txtHelper;
@@ -83,6 +87,14 @@ public class MainActivity extends AppCompatActivity {
     private ObjectAnimator shimmerAnimator;
     private Boolean lastDayMode;
 
+    private NestedScrollView nestedScrollMain;
+    private View layoutCityRow;
+    private View scrollContentRoot;
+    private View appBarStickyCity;
+    private int cityStickyScrollThresholdPx;
+    private boolean stickyHeaderVisible;
+    private int stickyScrollSlopPx;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         LanguageHelper.applySavedLanguage(this);
@@ -94,6 +106,13 @@ public class MainActivity extends AppCompatActivity {
 
         txtStatus = findViewById(R.id.txtStatus);
         txtCity = findViewById(R.id.txtCity);
+        txtCitySticky = findViewById(R.id.txtCitySticky);
+        nestedScrollMain = findViewById(R.id.nestedScrollMain);
+        layoutCityRow = findViewById(R.id.layoutCityRow);
+        scrollContentRoot = findViewById(R.id.scrollContentRoot);
+        appBarStickyCity = findViewById(R.id.appBarStickyCity);
+        stickyScrollSlopPx = (int) TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP, 8f, getResources().getDisplayMetrics());
         txtTemp = findViewById(R.id.txtTemp);
         txtDesc = findViewById(R.id.txtDesc);
         txtHelper = findViewById(R.id.txtHelper);
@@ -120,7 +139,6 @@ public class MainActivity extends AppCompatActivity {
                 ContextCompat.getColor(this, R.color.teal_200));
         swipeRefresh.setProgressBackgroundColorSchemeResource(R.color.white);
         swipeRefresh.setOnRefreshListener(this::performRefresh);
-        Button btnGoToList = findViewById(R.id.btnGoToList);
         Button btnSettings = findViewById(R.id.btnSettings);
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
@@ -128,11 +146,16 @@ public class MainActivity extends AppCompatActivity {
         currentUnit = WeatherPreferences.getUnit(this);
         currentLanguage = LanguageHelper.getCurrentLanguage(this);
 
-        btnGoToList.setOnClickListener(v ->
-                startActivity(new Intent(MainActivity.this, CityListActivity.class)));
+        findViewById(R.id.btnSearchCity).setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, CityListActivity.class);
+            intent.putExtra(CityListActivity.EXTRA_FOCUS_SEARCH, true);
+            startActivity(intent);
+        });
 
         btnSettings.setOnClickListener(v ->
                 startActivity(new Intent(MainActivity.this, SettingsActivity.class)));
+
+        setupStickyCityHeader();
 
         setupDynamicBackground();
 
@@ -157,6 +180,11 @@ public class MainActivity extends AppCompatActivity {
         }
         scheduleBackgroundTimeCheck();
 
+        nestedScrollMain.post(() -> {
+            remeasureCityStickyThreshold();
+            updateStickyCityHeaderVisibility(nestedScrollMain.getScrollY());
+        });
+
         String selectedUnit = WeatherPreferences.getUnit(this);
         String selectedLanguage = LanguageHelper.getCurrentLanguage(this);
         if (!selectedUnit.equals(currentUnit) || !selectedLanguage.equals(currentLanguage)) {
@@ -178,6 +206,64 @@ public class MainActivity extends AppCompatActivity {
         cancelLocationTimeout();
         swipeRefresh.setRefreshing(false);
         stopBackgroundUpdates();
+    }
+
+    private void setupStickyCityHeader() {
+        nestedScrollMain.post(() -> {
+            remeasureCityStickyThreshold();
+            updateStickyCityHeaderVisibility(nestedScrollMain.getScrollY());
+        });
+        nestedScrollMain.setOnScrollChangeListener(new View.OnScrollChangeListener() {
+            @Override
+            public void onScrollChange(View v, int scrollX, int scrollY, int oldScrollX, int oldScrollY) {
+                updateStickyCityHeaderVisibility(scrollY);
+            }
+        });
+    }
+
+    private void remeasureCityStickyThreshold() {
+        if (scrollContentRoot == null || layoutCityRow == null) {
+            return;
+        }
+        cityStickyScrollThresholdPx = topRelativeTo(layoutCityRow, scrollContentRoot);
+    }
+
+    private void updateStickyCityHeaderVisibility(int scrollY) {
+        if (cityStickyScrollThresholdPx <= 0) {
+            remeasureCityStickyThreshold();
+        }
+        if (cityStickyScrollThresholdPx <= 0) {
+            return;
+        }
+        boolean show = scrollY > cityStickyScrollThresholdPx - stickyScrollSlopPx;
+        if (show != stickyHeaderVisible) {
+            stickyHeaderVisible = show;
+            appBarStickyCity.setVisibility(show ? View.VISIBLE : View.GONE);
+        }
+    }
+
+    /**
+     * Khoảng cách dọc từ {@code view} tới {@code ancestor} (cùng cây view).
+     */
+    private static int topRelativeTo(View view, View ancestor) {
+        int top = 0;
+        View v = view;
+        while (v != null && v != ancestor) {
+            top += v.getTop();
+            ViewParent p = v.getParent();
+            v = p instanceof View ? (View) p : null;
+        }
+        return top;
+    }
+
+    private void setCityText(CharSequence text) {
+        txtCity.setText(text);
+        txtCitySticky.setText(text);
+    }
+
+    private void setCityText(int resId) {
+        txtCity.setText(resId);
+        txtCitySticky.setText(resId);
     }
 
     private void setupDynamicBackground() {
@@ -426,7 +512,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void showLoadingState(int statusResId, String cityText, int helperResId) {
         txtStatus.setText(statusResId);
-        txtCity.setText(cityText);
+        setCityText(cityText);
         txtTemp.setText("--");
         txtDesc.setText(R.string.main_weather_placeholder);
         txtHelper.setText(helperResId);
@@ -438,7 +524,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateWeatherUi(WeatherInfo weatherInfo) {
         txtStatus.setText(showingFallbackCity ? R.string.main_status_fallback : R.string.main_status_current_location);
-        txtCity.setText(weatherInfo.getCityName());
+        setCityText(weatherInfo.getCityName());
         txtTemp.setText(Math.round(weatherInfo.getTemperature()) + WeatherPreferences.getTemperatureUnitSymbol(this));
         txtDesc.setText(weatherInfo.getDescription());
         txtHelper.setText(showingFallbackCity ? R.string.main_helper_fallback : R.string.main_helper_current_location);
@@ -456,7 +542,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void showMissingApiKey() {
         txtStatus.setText(R.string.main_status_missing_config);
-        txtCity.setText(R.string.main_status_missing_config);
+        setCityText(R.string.main_status_missing_config);
         txtTemp.setText("--");
         txtDesc.setText(R.string.main_helper_missing_api_key);
         txtHelper.setText(R.string.main_helper_missing_api_key);
@@ -470,7 +556,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void showWeatherError(String message) {
         txtStatus.setText(R.string.main_status_error);
-        txtCity.setText(R.string.main_status_error);
+        setCityText(R.string.main_status_error);
         txtTemp.setText("--");
         txtDesc.setText(message);
         txtHelper.setText(R.string.main_helper_retry);
@@ -490,6 +576,7 @@ public class MainActivity extends AppCompatActivity {
         hourlyForecastAdapter.notifyDataSetChanged();
         dailyForecastAdapter.notifyDataSetChanged();
         txtHourlySummary.setText("");
+        RecyclerViewHeightHelper.setVerticalListHeightToContent(rvDaily);
     }
 
     private void loadForecastAfterCurrentWeather(WeatherInfo weatherInfo) {
@@ -546,5 +633,6 @@ public class MainActivity extends AppCompatActivity {
         dailyForecastItems.clear();
         dailyForecastItems.addAll(result.getDaily());
         dailyForecastAdapter.notifyDataSetChanged();
+        RecyclerViewHeightHelper.setVerticalListHeightToContent(rvDaily);
     }
 }

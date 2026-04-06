@@ -23,10 +23,11 @@
     <string name="main_helper_retry">Hãy kiểm tra mạng hoặc kéo xuống để làm mới.</string>
     <string name="main_label_humidity">Độ ẩm</string>
     <string name="main_label_wind">Gió</string>
-    <string name="main_action_city_list">Xem danh sách tỉnh thành</string>
     <string name="main_action_settings">Cài đặt</string>
     <string name="main_action_refresh">Làm mới</string>
     <string name="main_refresh_content_description">Làm mới thời tiết</string>
+    <string name="main_search_city_cd">Tìm kiếm thành phố</string>
+    <string name="main_city_location_cd">Vị trí thành phố</string>
     <string name="main_loading_city">Đang tải thời tiết...</string>
     <string name="main_loading_fallback_city">Đang tải thời tiết Hà Nội...</string>
     <string name="main_weather_placeholder">Mô tả thời tiết</string>
@@ -56,6 +57,7 @@
     <string name="detail_missing_api_key">Thiếu WEATHER_API_KEY trong local.properties.</string>
     <string name="city_list_title">Chọn tỉnh/thành phố</string>
     <string name="city_list_subtitle">Chọn một địa điểm để xem dự báo chi tiết.</string>
+    <string name="city_list_search_hint">Tìm theo tên</string>
     <string name="city_list_item_cd_city">Xem thời tiết %1$s</string>
     <string name="city_list_error">Không tải được danh sách tỉnh/thành. Kiểm tra kết nối mạng rồi thử lại.</string>
     <string name="weather_error_parse">Không thể đọc dữ liệu thời tiết.</string>

@@ -10,6 +10,7 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.TimeoutError;
 import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 
@@ -30,6 +31,7 @@ public class WeatherRepository {
 
     private static final String BASE_URL = "https://api.openweathermap.org/data/2.5/weather";
     private static final String FORECAST_URL = "https://api.openweathermap.org/data/2.5/forecast";
+    private static final String GEO_DIRECT_URL = "https://api.openweathermap.org/geo/1.0/direct";
     private static final int HOURLY_SLOTS = 8;
     private static final int MAX_DAILY_ROWS = 7;
 
@@ -75,7 +77,7 @@ public class WeatherRepository {
                 .appendQueryParameter("units", unit)
                 .appendQueryParameter("lang", LanguageHelper.getCurrentLanguage(appContext))
                 .build();
-        fetchWeather(uri.toString(), requestTag, callback);
+        fetchWeatherWithGeoFallback(uri.toString(), cityName, unit, requestTag, callback);
     }
 
     public void fetchForecastByCoordinates(double lat, double lon, String unit, Object requestTag, ForecastCallback callback) {
@@ -96,7 +98,7 @@ public class WeatherRepository {
                 .appendQueryParameter("units", unit)
                 .appendQueryParameter("lang", LanguageHelper.getCurrentLanguage(appContext))
                 .build();
-        fetchForecast(uri.toString(), requestTag, callback);
+        fetchForecastWithGeoFallback(uri.toString(), cityName, unit, requestTag, callback);
     }
 
     public void cancel(Object requestTag) {
@@ -122,6 +124,63 @@ public class WeatherRepository {
         requestQueue.add(request);
     }
 
+    /**
+     * Khi gọi theo tên mà OpenWeather trả 404, thử Geocoding API rồi lấy thời tiết theo tọa độ.
+     */
+    private void fetchWeatherWithGeoFallback(String url, String cityQuery, String unit, Object requestTag, WeatherCallback callback) {
+        JsonObjectRequest request = new JsonObjectRequest(
+                Request.Method.GET,
+                url,
+                null,
+                response -> {
+                    try {
+                        callback.onSuccess(parseWeather(response));
+                    } catch (JSONException exception) {
+                        callback.onError(appContext.getString(R.string.weather_error_parse));
+                    }
+                },
+                error -> {
+                    if (isHttpNotFound(error)) {
+                        geocodeDirectThenWeather(cityQuery, unit, requestTag, callback);
+                    } else {
+                        callback.onError(mapError(error));
+                    }
+                }
+        );
+        request.setTag(requestTag);
+        requestQueue.add(request);
+    }
+
+    private void geocodeDirectThenWeather(String cityQuery, String unit, Object requestTag, WeatherCallback callback) {
+        Uri geoUri = Uri.parse(GEO_DIRECT_URL).buildUpon()
+                .appendQueryParameter("q", cityQuery)
+                .appendQueryParameter("limit", "5")
+                .appendQueryParameter("appid", BuildConfig.WEATHER_API_KEY)
+                .build();
+        JsonArrayRequest geoRequest = new JsonArrayRequest(
+                Request.Method.GET,
+                geoUri.toString(),
+                null,
+                response -> {
+                    try {
+                        if (response.length() == 0) {
+                            callback.onError(appContext.getString(R.string.weather_error_not_found));
+                            return;
+                        }
+                        JSONObject first = response.getJSONObject(0);
+                        double lat = first.getDouble("lat");
+                        double lon = first.getDouble("lon");
+                        fetchWeatherByCoordinates(lat, lon, unit, requestTag, callback);
+                    } catch (JSONException e) {
+                        callback.onError(appContext.getString(R.string.weather_error_parse));
+                    }
+                },
+                error -> callback.onError(mapError(error))
+        );
+        geoRequest.setTag(requestTag);
+        requestQueue.add(geoRequest);
+    }
+
     private void fetchForecast(String url, Object requestTag, ForecastCallback callback) {
         JsonObjectRequest request = new JsonObjectRequest(
                 Request.Method.GET,
@@ -138,6 +197,64 @@ public class WeatherRepository {
         );
         request.setTag(requestTag);
         requestQueue.add(request);
+    }
+
+    private void fetchForecastWithGeoFallback(String url, String cityQuery, String unit, Object requestTag, ForecastCallback callback) {
+        JsonObjectRequest request = new JsonObjectRequest(
+                Request.Method.GET,
+                url,
+                null,
+                response -> {
+                    try {
+                        callback.onSuccess(parseForecast(response));
+                    } catch (JSONException exception) {
+                        callback.onError(appContext.getString(R.string.weather_error_parse));
+                    }
+                },
+                error -> {
+                    if (isHttpNotFound(error)) {
+                        geocodeDirectThenForecast(cityQuery, unit, requestTag, callback);
+                    } else {
+                        callback.onError(mapError(error));
+                    }
+                }
+        );
+        request.setTag(requestTag);
+        requestQueue.add(request);
+    }
+
+    private void geocodeDirectThenForecast(String cityQuery, String unit, Object requestTag, ForecastCallback callback) {
+        Uri geoUri = Uri.parse(GEO_DIRECT_URL).buildUpon()
+                .appendQueryParameter("q", cityQuery)
+                .appendQueryParameter("limit", "5")
+                .appendQueryParameter("appid", BuildConfig.WEATHER_API_KEY)
+                .build();
+        JsonArrayRequest geoRequest = new JsonArrayRequest(
+                Request.Method.GET,
+                geoUri.toString(),
+                null,
+                response -> {
+                    try {
+                        if (response.length() == 0) {
+                            callback.onError(appContext.getString(R.string.weather_error_not_found));
+                            return;
+                        }
+                        JSONObject first = response.getJSONObject(0);
+                        double lat = first.getDouble("lat");
+                        double lon = first.getDouble("lon");
+                        fetchForecastByCoordinates(lat, lon, unit, requestTag, callback);
+                    } catch (JSONException e) {
+                        callback.onError(appContext.getString(R.string.weather_error_parse));
+                    }
+                },
+                error -> callback.onError(mapError(error))
+        );
+        geoRequest.setTag(requestTag);
+        requestQueue.add(geoRequest);
+    }
+
+    private static boolean isHttpNotFound(VolleyError error) {
+        return error.networkResponse != null && error.networkResponse.statusCode == 404;
     }
 
     private WeatherInfo parseWeather(JSONObject response) throws JSONException {

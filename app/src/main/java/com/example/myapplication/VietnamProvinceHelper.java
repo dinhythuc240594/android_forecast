@@ -1,13 +1,17 @@
 package com.example.myapplication;
 
+import java.text.Normalizer;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 /**
  * Chuẩn hoá tên từ provinces.open-api.vn (v2) để gọi OpenWeather {@code q}.
  * OpenWeather chủ yếu nhận tên tiếng Anh + {@code ,VN}, không ổn định với chuỗi tiếng Việt có dấu.
  */
 public final class VietnamProvinceHelper {
+
+    private static final Pattern COMBINING_MARKS = Pattern.compile("\\p{M}+");
 
     /**
      * {@code codename} từ API (ổn định) → tham số {@code q} cho OpenWeather.
@@ -27,7 +31,8 @@ public final class VietnamProvinceHelper {
         CODE_TO_OPEN_WEATHER_Q.put("quang_ninh", "Ha Long,VN");
         CODE_TO_OPEN_WEATHER_Q.put("bac_ninh", "Bac Ninh,VN");
         CODE_TO_OPEN_WEATHER_Q.put("phu_tho", "Viet Tri,VN");
-        CODE_TO_OPEN_WEATHER_Q.put("hai_phong", "Hai Phong,VN");
+        /* OpenWeather thường khớp "Haiphong" (một từ) hơn "Hai Phong" */
+        CODE_TO_OPEN_WEATHER_Q.put("hai_phong", "Haiphong,VN");
         CODE_TO_OPEN_WEATHER_Q.put("hung_yen", "Hung Yen,VN");
         CODE_TO_OPEN_WEATHER_Q.put("ninh_binh", "Ninh Binh,VN");
         CODE_TO_OPEN_WEATHER_Q.put("thanh_hoa", "Thanh Hoa,VN");
@@ -69,7 +74,8 @@ public final class VietnamProvinceHelper {
     }
 
     /**
-     * Bỏ tiền tố "Thành phố " / "Tỉnh " rồi thêm ",VN" — có thể không khớp OpenWeather.
+     * Bỏ tiền tố "Thành phố " / "Tỉnh ", bỏ dấu tiếng Việt rồi thêm ",VN".
+     * OpenWeather không ổn định với chuỗi có dấu trong {@code q}.
      */
     private static String toOpenWeatherQueryFallback(String administrativeName) {
         if (administrativeName == null) {
@@ -81,6 +87,20 @@ public final class VietnamProvinceHelper {
         } else if (s.startsWith("Tỉnh ")) {
             s = s.substring("Tỉnh ".length());
         }
+        s = stripVietnameseDiacritics(s);
+        s = s.trim();
+        if (s.isEmpty()) {
+            return "";
+        }
         return s + ",VN";
+    }
+
+    private static String stripVietnameseDiacritics(String s) {
+        if (s == null || s.isEmpty()) {
+            return "";
+        }
+        s = s.replace('đ', 'd').replace('Đ', 'D');
+        String n = Normalizer.normalize(s, Normalizer.Form.NFD);
+        return COMBINING_MARKS.matcher(n).replaceAll("").trim();
     }
 }

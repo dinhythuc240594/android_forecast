@@ -1,6 +1,8 @@
 package com.example.myapplication;
 
 import android.Manifest;
+import android.animation.ObjectAnimator;
+import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
@@ -11,6 +13,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.view.View;
+import android.view.animation.LinearInterpolator;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -32,6 +35,7 @@ import com.google.android.gms.tasks.CancellationTokenSource;
 import com.google.android.material.progressindicator.LinearProgressIndicator;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
 
@@ -41,6 +45,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String WEATHER_REQUEST_TAG = "main_weather";
     private static final String FORECAST_REQUEST_TAG = "main_forecast";
     private static final long LOCATION_TIMEOUT_MS = 10000L;
+    private static final long BACKGROUND_TIME_CHECK_MS = 60_000L;
     private static final String DEFAULT_CITY = "Hanoi";
 
     private TextView txtStatus;
@@ -69,6 +74,14 @@ public class MainActivity extends AppCompatActivity {
     private CancellationTokenSource locationCancellationTokenSource;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private final Runnable locationTimeoutRunnable = this::handleLocationTimeout;
+    private final Runnable backgroundTimeRunnable = this::tickDayNightBackground;
+
+    private View backgroundDay;
+    private View backgroundNight;
+    private View backgroundShimmer;
+    private View backgroundScrim;
+    private ObjectAnimator shimmerAnimator;
+    private Boolean lastDayMode;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -121,6 +134,8 @@ public class MainActivity extends AppCompatActivity {
         btnSettings.setOnClickListener(v ->
                 startActivity(new Intent(MainActivity.this, SettingsActivity.class)));
 
+        setupDynamicBackground();
+
         if (WeatherRepository.hasApiKey()) {
             getLocation();
         } else {
@@ -131,6 +146,17 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        boolean nowDay = isLocalDayTime();
+        if (lastDayMode == null || lastDayMode != nowDay) {
+            boolean animate = lastDayMode != null;
+            lastDayMode = nowDay;
+            applyDayNightBackground(nowDay, animate);
+            startShimmerAnimation(nowDay);
+        } else {
+            startShimmerAnimation(nowDay);
+        }
+        scheduleBackgroundTimeCheck();
+
         String selectedUnit = WeatherPreferences.getUnit(this);
         String selectedLanguage = LanguageHelper.getCurrentLanguage(this);
         if (!selectedUnit.equals(currentUnit) || !selectedLanguage.equals(currentLanguage)) {
@@ -151,6 +177,78 @@ public class MainActivity extends AppCompatActivity {
         weatherRepository.cancel(FORECAST_REQUEST_TAG);
         cancelLocationTimeout();
         swipeRefresh.setRefreshing(false);
+        stopBackgroundUpdates();
+    }
+
+    private void setupDynamicBackground() {
+        backgroundDay = findViewById(R.id.backgroundDay);
+        backgroundNight = findViewById(R.id.backgroundNight);
+        backgroundShimmer = findViewById(R.id.backgroundShimmer);
+        backgroundScrim = findViewById(R.id.backgroundScrim);
+        boolean day = isLocalDayTime();
+        lastDayMode = day;
+        applyDayNightBackground(day, false);
+        startShimmerAnimation(day);
+    }
+
+    /**
+     * Giờ địa phương: 6:00–18:59 = ban ngày (nền sáng), còn lại = ban đêm (nền tối).
+     */
+    private boolean isLocalDayTime() {
+        int hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY);
+        return hour >= 6 && hour < 19;
+    }
+
+    private void applyDayNightBackground(boolean day, boolean animate) {
+        if (animate) {
+            backgroundDay.animate().alpha(day ? 1f : 0f).setDuration(900).start();
+            backgroundNight.animate().alpha(day ? 0f : 1f).setDuration(900).start();
+        } else {
+            backgroundDay.setAlpha(day ? 1f : 0f);
+            backgroundNight.setAlpha(day ? 0f : 1f);
+        }
+        backgroundShimmer.setBackgroundResource(
+                day ? R.drawable.bg_main_day_shimmer : R.drawable.bg_main_night_shimmer);
+        backgroundScrim.setBackgroundColor(
+                ContextCompat.getColor(this, day ? R.color.home_scrim_day : R.color.home_scrim_night));
+    }
+
+    private void startShimmerAnimation(boolean day) {
+        if (shimmerAnimator != null) {
+            shimmerAnimator.cancel();
+            shimmerAnimator = null;
+        }
+        float lo = day ? 0.12f : 0.08f;
+        float hi = day ? 0.45f : 0.34f;
+        shimmerAnimator = ObjectAnimator.ofFloat(backgroundShimmer, View.ALPHA, lo, hi);
+        shimmerAnimator.setDuration(4200);
+        shimmerAnimator.setRepeatMode(ValueAnimator.REVERSE);
+        shimmerAnimator.setRepeatCount(ValueAnimator.INFINITE);
+        shimmerAnimator.setInterpolator(new LinearInterpolator());
+        shimmerAnimator.start();
+    }
+
+    private void tickDayNightBackground() {
+        boolean now = isLocalDayTime();
+        if (lastDayMode == null || lastDayMode != now) {
+            lastDayMode = now;
+            applyDayNightBackground(now, true);
+            startShimmerAnimation(now);
+        }
+        mainHandler.postDelayed(backgroundTimeRunnable, BACKGROUND_TIME_CHECK_MS);
+    }
+
+    private void scheduleBackgroundTimeCheck() {
+        mainHandler.removeCallbacks(backgroundTimeRunnable);
+        mainHandler.post(backgroundTimeRunnable);
+    }
+
+    private void stopBackgroundUpdates() {
+        mainHandler.removeCallbacks(backgroundTimeRunnable);
+        if (shimmerAnimator != null) {
+            shimmerAnimator.cancel();
+            shimmerAnimator = null;
+        }
     }
 
     private void performRefresh() {

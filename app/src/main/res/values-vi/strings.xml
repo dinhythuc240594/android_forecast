@@ -37,7 +37,10 @@
     <string name="main_message_location_timeout">Lấy vị trí quá lâu, đang hiển thị thời tiết Hà Nội.</string>
     <string name="main_message_missing_api_key">Thiếu WEATHER_API_KEY cho OpenWeather.</string>
     <string name="settings_title">Cài đặt chung</string>
+    <string name="settings_subtitle">Chọn cách hiển thị nhiệt độ và ngôn ngữ giao diện ứng dụng.</string>
     <string name="settings_temperature_unit">Đơn vị nhiệt độ</string>
+    <string name="settings_temperature_hint">Áp dụng cho màn hình chính và chi tiết thời tiết theo thành phố.</string>
+    <string name="settings_language_hint">Có hiệu lực sau khi lưu; nội dung sẽ cập nhật khi bạn quay lại màn hình trước.</string>
     <string name="settings_unit_celsius">Độ C (Celsius)</string>
     <string name="settings_unit_fahrenheit">Độ F (Fahrenheit)</string>
     <string name="settings_language">Ngôn ngữ</string>
@@ -54,6 +57,7 @@
     <string name="city_list_title">Chọn tỉnh/thành phố</string>
     <string name="city_list_subtitle">Chọn một địa điểm để xem dự báo chi tiết.</string>
     <string name="city_list_item_cd_city">Xem thời tiết %1$s</string>
+    <string name="city_list_error">Không tải được danh sách tỉnh/thành. Kiểm tra kết nối mạng rồi thử lại.</string>
     <string name="weather_error_parse">Không thể đọc dữ liệu thời tiết.</string>
     <string name="weather_error_invalid_key">API key không hợp lệ hoặc đã hết hạn.</string>
     <string name="weather_error_connection">Không thể kết nối tới máy chủ thời tiết.</string>

@@ -12,15 +12,15 @@ import java.util.List;
 
 public class CityAdapter extends RecyclerView.Adapter<CityAdapter.CityViewHolder>{
 
-    private List<String> cityList;
+    private List<ProvinceItem> cityList;
     private OnItemClickListener listener;
 
     // Interface để bắt sự kiện click và truyền ra ngoài Activity
     public interface OnItemClickListener {
-        void onItemClick(String city);
+        void onItemClick(ProvinceItem item);
     }
 
-    public CityAdapter(List<String> cityList, OnItemClickListener listener) {
+    public CityAdapter(List<ProvinceItem> cityList, OnItemClickListener listener) {
         this.cityList = cityList;
         this.listener = listener;
     }
@@ -34,14 +34,14 @@ public class CityAdapter extends RecyclerView.Adapter<CityAdapter.CityViewHolder
 
     @Override
     public void onBindViewHolder(@NonNull CityViewHolder holder, int position) {
-        String city = cityList.get(position);
-        holder.txtCityName.setText(city);
+        ProvinceItem item = cityList.get(position);
+        holder.txtCityName.setText(item.displayName);
         holder.itemView.setContentDescription(
-                holder.itemView.getContext().getString(R.string.city_list_item_cd_city, city));
+                holder.itemView.getContext().getString(R.string.city_list_item_cd_city, item.displayName));
 
         holder.itemView.setOnClickListener(v -> {
             if (listener != null) {
-                listener.onItemClick(city);
+                listener.onItemClick(item);
             }
         });
     }

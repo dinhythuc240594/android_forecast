@@ -23,7 +23,9 @@
             android:name=".CityListActivity"
             android:theme="@style/Theme.MyApplication.NoActionBar" />
         <activity android:name=".DetailActivity" />
-        <activity android:name=".SettingsActivity" />
+        <activity
+            android:name=".SettingsActivity"
+            android:theme="@style/Theme.MyApplication.NoActionBar" />
         <service android:name=".MyService" />
 
     </application>

@@ -2,19 +2,40 @@ package com.example.myapplication;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.ProgressBar;
+import android.widget.Toast;
+
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.Volley;
 import com.google.android.material.appbar.MaterialToolbar;
-import java.util.Arrays;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.text.Collator;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class CityListActivity extends AppCompatActivity {
 
+    private static final String PROVINCES_API =
+            "https://provinces.open-api.vn/api/v2/?depth=1";
+    private static final String PROVINCES_REQUEST_TAG = "vn_provinces";
+
     private RecyclerView rvCities;
+    private ProgressBar progressCityList;
     private CityAdapter cityAdapter;
-    private List<String> cityList;
+    private List<ProvinceItem> cityList = new ArrayList<>();
+    private RequestQueue requestQueue;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,31 +52,73 @@ public class CityListActivity extends AppCompatActivity {
         toolbar.setNavigationOnClickListener(v -> getOnBackPressedDispatcher().onBackPressed());
 
         rvCities = findViewById(R.id.rvCities);
+        progressCityList = findViewById(R.id.progressCityList);
         rvCities.setHasFixedSize(true);
-
-        // Chuẩn bị dữ liệu: Danh sách một số tỉnh/thành Việt Nam (API OpenWeather nhận dạng tốt không dấu hoặc tiếng Anh, nhưng tiếng Việt có dấu vẫn dùng được tuỳ query)
-        // Mẹo: Nếu API trả về lỗi với tên có dấu, bạn có thể truyền tên không dấu hoặc thêm chữ "Province" đằng sau.
-        cityList = Arrays.asList(
-                "Hanoi", "Ho Chi Minh City", "Da Nang", "Hai Phong", "Can Tho",
-                "Hue", "Nha Trang", "Da Lat", "Vung Tau", "Ha Long",
-                "Quy Nhon", "Vinh", "Nam Dinh", "Thanh Hoa", "Rach Gia"
-        );
-
-        // Cấu hình RecyclerView
         rvCities.setLayoutManager(new LinearLayoutManager(this));
 
-        // Khởi tạo Adapter và xử lý sự kiện click
-        cityAdapter = new CityAdapter(cityList, new CityAdapter.OnItemClickListener() {
-            @Override
-            public void onItemClick(String city) {
-                // Chuyển sang Màn hình 3 (DetailActivity) và gửi kèm tên thành phố
-                Intent intent = new Intent(CityListActivity.this, DetailActivity.class);
-                intent.putExtra("CITY_NAME", city);
-                startActivity(intent);
-            }
+        cityAdapter = new CityAdapter(cityList, item -> {
+            Intent intent = new Intent(CityListActivity.this, DetailActivity.class);
+            intent.putExtra("CITY_NAME", item.displayName);
+            intent.putExtra("WEATHER_QUERY", item.weatherQuery);
+            startActivity(intent);
         });
-
-        // Gắn Adapter vào RecyclerView
         rvCities.setAdapter(cityAdapter);
+
+        requestQueue = Volley.newRequestQueue(this);
+        loadProvinces();
+    }
+
+    private void loadProvinces() {
+        progressCityList.setVisibility(View.VISIBLE);
+        rvCities.setVisibility(View.GONE);
+
+        JsonArrayRequest request = new JsonArrayRequest(
+                Request.Method.GET,
+                PROVINCES_API,
+                null,
+                response -> {
+                    progressCityList.setVisibility(View.GONE);
+                    rvCities.setVisibility(View.VISIBLE);
+                    try {
+                        cityList.clear();
+                        cityList.addAll(parseProvinces(response));
+                        cityAdapter.notifyDataSetChanged();
+                    } catch (JSONException e) {
+                        Toast.makeText(this, R.string.city_list_error, Toast.LENGTH_LONG).show();
+                    }
+                },
+                error -> {
+                    progressCityList.setVisibility(View.GONE);
+                    rvCities.setVisibility(View.VISIBLE);
+                    Toast.makeText(this, R.string.city_list_error, Toast.LENGTH_LONG).show();
+                }
+        );
+        request.setTag(PROVINCES_REQUEST_TAG);
+        requestQueue.add(request);
+    }
+
+    private List<ProvinceItem> parseProvinces(JSONArray arr) throws JSONException {
+        List<ProvinceItem> list = new ArrayList<>();
+        for (int i = 0; i < arr.length(); i++) {
+            JSONObject o = arr.getJSONObject(i);
+            String name = o.optString("name", "").trim();
+            String codename = o.optString("codename", "").trim();
+            if (name.isEmpty()) {
+                continue;
+            }
+            list.add(new ProvinceItem(name, VietnamProvinceHelper.toOpenWeatherQuery(name, codename)));
+        }
+        Collator collator = Collator.getInstance(new Locale("vi", "VN"));
+        collator.setStrength(Collator.PRIMARY);
+        list.sort((a, b) -> collator.compare(a.displayName, b.displayName));
+        return list;
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (requestQueue != null) {
+            requestQueue.cancelAll(PROVINCES_REQUEST_TAG);
+        }
     }
 }

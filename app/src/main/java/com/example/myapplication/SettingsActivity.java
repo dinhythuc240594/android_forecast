@@ -1,11 +1,13 @@
 package com.example.myapplication;
 
 import android.os.Bundle;
-import android.widget.Button;
 import android.widget.RadioButton;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.google.android.material.appbar.MaterialToolbar;
+import com.google.android.material.button.MaterialButton;
 
 public class SettingsActivity extends AppCompatActivity {
 
@@ -13,13 +15,21 @@ public class SettingsActivity extends AppCompatActivity {
     private RadioButton rbFahrenheit;
     private RadioButton rbVietnamese;
     private RadioButton rbEnglish;
-    private Button btnSaveSettings;
+    private MaterialButton btnSaveSettings;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         LanguageHelper.applySavedLanguage(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
+
+        MaterialToolbar toolbar = findViewById(R.id.toolbarSettings);
+        setSupportActionBar(toolbar);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setDisplayShowHomeEnabled(true);
+        }
+        toolbar.setNavigationOnClickListener(v -> getOnBackPressedDispatcher().onBackPressed());
 
         rbCelsius = findViewById(R.id.rbCelsius);
         rbFahrenheit = findViewById(R.id.rbFahrenheit);

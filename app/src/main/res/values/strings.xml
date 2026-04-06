@@ -39,7 +39,10 @@
     <string name="main_message_location_timeout">Location lookup took too long, showing Hanoi weather.</string>
     <string name="main_message_missing_api_key">Missing WEATHER_API_KEY for OpenWeather.</string>
     <string name="settings_title">General settings</string>
+    <string name="settings_subtitle">Choose how temperatures are shown and which language the app uses.</string>
     <string name="settings_temperature_unit">Temperature unit</string>
+    <string name="settings_temperature_hint">Affects readings on the home screen and city details.</string>
+    <string name="settings_language_hint">Applies after you save; the app will refresh text on the next screen.</string>
     <string name="settings_unit_celsius">Celsius (°C)</string>
     <string name="settings_unit_fahrenheit">Fahrenheit (°F)</string>
     <string name="settings_language">Language</string>
@@ -56,6 +59,7 @@
     <string name="city_list_title">Choose a city</string>
     <string name="city_list_subtitle">Pick a location to view the full forecast.</string>
     <string name="city_list_item_cd_city">Open weather for %1$s</string>
+    <string name="city_list_error">Could not load the province list. Check your connection and try again.</string>
     <string name="weather_error_parse">Unable to read weather data.</string>
     <string name="weather_error_invalid_key">API key is invalid or expired.</string>
     <string name="weather_error_connection">Unable to connect to the weather server.</string>

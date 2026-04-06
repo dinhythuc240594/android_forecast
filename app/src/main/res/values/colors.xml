@@ -8,6 +8,8 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="home_scrim">#7A10233E</color>
+    <color name="home_scrim_day">#6E0F2744</color>
+    <color name="home_scrim_night">#C0100822</color>
     <color name="home_card_surface">#EAF7FBFF</color>
     <color name="home_card_stroke">#33FFFFFF</color>
     <color name="home_title_text">#FF0F172A</color>

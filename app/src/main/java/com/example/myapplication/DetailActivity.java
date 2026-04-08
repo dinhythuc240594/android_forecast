@@ -1,5 +1,7 @@
 package com.example.myapplication;
 
+import static android.content.ContentValues.TAG;
+
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
@@ -22,7 +24,9 @@ public class DetailActivity extends AppCompatActivity {
     private static final String WEATHER_REQUEST_TAG = "detail_weather";
     private static final String FORECAST_REQUEST_TAG = "detail_forecast";
 
-    private TextView txtDetailCity, txtDetailTemp, txtDetailDesc, txtHumidity, txtWind;
+    private static final String[] AQI_LEVELS = {"Tốt", "Khá", "Trung bình", "Kém", "Rất kém"};
+
+    private TextView txtDetailCity, txtDetailTemp, txtDetailDesc, txtHumidity, txtWind, txtAQI, txtUV;
     private TextView txtHourlySummary;
     private LinearProgressIndicator progressDetailLoading;
     private View layoutForecastSections;
@@ -51,6 +55,8 @@ public class DetailActivity extends AppCompatActivity {
         txtDetailDesc = findViewById(R.id.txtDetailDesc);
         txtHumidity = findViewById(R.id.txtHumidity);
         txtWind = findViewById(R.id.txtWind);
+        txtAQI = findViewById(R.id.txtAQI);
+        txtUV = findViewById(R.id.txtUV);
         txtHourlySummary = findViewById(R.id.txtHourlySummary);
         layoutForecastSections = findViewById(R.id.layoutForecastSections);
         rvHourly = findViewById(R.id.rvHourly);
@@ -120,16 +126,35 @@ public class DetailActivity extends AppCompatActivity {
             @Override
             public void onSuccess(WeatherInfo weatherInfo) {
                 progressDetailLoading.setVisibility(View.GONE);
-                txtDetailCity.setText(displayCityName != null ? displayCityName : weatherInfo.getCityName());
-                txtDetailTemp.setText(Math.round(weatherInfo.getTemperature()) + WeatherPreferences.getTemperatureUnitSymbol(DetailActivity.this));
-                txtDetailDesc.setText(weatherInfo.getDescription());
-                txtHumidity.setText(weatherInfo.getHumidity() + "%");
-                txtWind.setText(String.format(
-                        Locale.getDefault(),
-                        "%.1f%s",
-                        weatherInfo.getWindSpeed(),
-                        WeatherPreferences.getWindSpeedSuffix(DetailActivity.this)
-                ));
+                weatherRepository.fetchAirPollution(weatherInfo.getLatitude(), weatherInfo.getLongitude(), weatherInfo, TAG, new WeatherRepository.WeatherCallback() {
+                    @Override
+                    public void onSuccess(WeatherInfo fullyweatherInfo) {
+                        txtDetailCity.setText(displayCityName != null ? displayCityName : fullyweatherInfo.getCityName());
+                        txtDetailTemp.setText(Math.round(fullyweatherInfo.getTemperature()) + WeatherPreferences.getTemperatureUnitSymbol(DetailActivity.this));
+                        txtDetailDesc.setText(fullyweatherInfo.getDescription());
+                        txtHumidity.setText(fullyweatherInfo.getHumidity() + "%");
+                        txtWind.setText(String.format(
+                                Locale.getDefault(),
+                                "%.1f%s",
+                                fullyweatherInfo.getWindSpeed(),
+                                WeatherPreferences.getWindSpeedSuffix(DetailActivity.this)
+                        ));
+                        int aqi = fullyweatherInfo.getAqi();
+                        if (aqi >= 1 && aqi <= AQI_LEVELS.length) {
+                            txtAQI.setText(AQI_LEVELS[aqi - 1]);
+                        } else {
+                            txtAQI.setText("N/A");
+                        }
+                        String uv_value = String.valueOf(fullyweatherInfo.getUv());
+                        txtUV.setText(uv_value);
+                    }
+
+                    @Override
+                    public void onError(String message) {
+                        showWeatherError(message);
+                    }
+                });
+
                 loadForecastAfterCurrentWeather(weatherInfo);
             }
 
@@ -215,6 +240,8 @@ public class DetailActivity extends AppCompatActivity {
         txtDetailDesc.setText(message);
         txtHumidity.setText("--%");
         txtWind.setText("--");
+        txtAQI.setText("--");
+        txtUV.setText("0");
         clearForecastUi();
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }

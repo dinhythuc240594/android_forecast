@@ -23,6 +23,8 @@
     <string name="main_helper_retry">Hãy kiểm tra mạng hoặc kéo xuống để làm mới.</string>
     <string name="main_label_humidity">Độ ẩm</string>
     <string name="main_label_wind">Gió</string>
+    <string name="main_label_aqi">AQI</string>
+    <string name="main_label_uv">uv</string>
     <string name="main_action_settings">Cài đặt</string>
     <string name="main_action_refresh">Làm mới</string>
     <string name="main_refresh_content_description">Làm mới thời tiết</string>

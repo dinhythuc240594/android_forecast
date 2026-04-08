@@ -7,6 +7,8 @@ public class WeatherInfo {
     private final String description;
     private final int humidity;
     private final double windSpeed;
+    private int aqi;
+    private final double uv;
     private final double latitude;
     private final double longitude;
     private final boolean hasCoordinates;
@@ -17,6 +19,8 @@ public class WeatherInfo {
             String description,
             int humidity,
             double windSpeed,
+            int aqi,
+            double uv,
             double latitude,
             double longitude,
             boolean hasCoordinates
@@ -29,6 +33,8 @@ public class WeatherInfo {
         this.latitude = latitude;
         this.longitude = longitude;
         this.hasCoordinates = hasCoordinates;
+        this.aqi = aqi;
+        this.uv = uv;
     }
 
     public String getCityName() {
@@ -49,6 +55,18 @@ public class WeatherInfo {
 
     public double getWindSpeed() {
         return windSpeed;
+    }
+
+    public int getAqi(){
+        return aqi;
+    }
+
+    public void setAqi(int aqi){
+        this.aqi = aqi;
+    }
+
+    public double getUv(){
+        return  uv;
     }
 
     public boolean hasCoordinates() {

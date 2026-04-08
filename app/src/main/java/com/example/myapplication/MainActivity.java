@@ -1,5 +1,7 @@
 package com.example.myapplication;
 
+import static android.content.ContentValues.TAG;
+
 import android.Manifest;
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
@@ -12,6 +14,7 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewParent;
@@ -38,6 +41,7 @@ import com.google.android.gms.tasks.CancellationTokenSource;
 import com.google.android.material.progressindicator.LinearProgressIndicator;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
@@ -51,6 +55,8 @@ public class MainActivity extends AppCompatActivity {
     private static final long BACKGROUND_TIME_CHECK_MS = 60_000L;
     private static final String DEFAULT_CITY = "Hanoi";
 
+    private static final String[] AQI_LEVELS = {"Tốt", "Khá", "Trung bình", "Kém", "Rất kém"};
+
     private TextView txtStatus;
     private TextView txtCity;
     private TextView txtCitySticky;
@@ -59,6 +65,9 @@ public class MainActivity extends AppCompatActivity {
     private TextView txtHelper;
     private TextView txtHumidityValue;
     private TextView txtWindValue;
+    private TextView txtAQIValue;
+    private TextView txtUVValue;
+
     private SwipeRefreshLayout swipeRefresh;
     private LinearProgressIndicator progressLoading;
     private View layoutForecastSections;
@@ -118,6 +127,8 @@ public class MainActivity extends AppCompatActivity {
         txtHelper = findViewById(R.id.txtHelper);
         txtHumidityValue = findViewById(R.id.txtHumidityValue);
         txtWindValue = findViewById(R.id.txtWindValue);
+        txtAQIValue = findViewById(R.id.txtAQI);
+        txtUVValue = findViewById(R.id.txtUV);
         swipeRefresh = findViewById(R.id.swipeRefresh);
         progressLoading = findViewById(R.id.progressLoading);
         layoutForecastSections = findViewById(R.id.layoutForecastSections);
@@ -362,7 +373,22 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onSuccess(WeatherInfo weatherInfo) {
                 showingFallbackCity = false;
-                updateWeatherUi(weatherInfo);
+//                updateWeatherUi(weatherInfo);
+
+                weatherRepository.fetchAirPollution(lat, lon, weatherInfo, TAG, new WeatherRepository.WeatherCallback() {
+                    @Override
+                    public void onSuccess(WeatherInfo fullyLoadedInfo) {
+                        updateWeatherUi(fullyLoadedInfo);
+                    }
+
+                    @Override
+                    public void onError(String message) {
+                        // Xử lý nếu cần
+                        showWeatherError(message);
+                    }
+                });
+
+
             }
 
             @Override
@@ -464,7 +490,20 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onSuccess(WeatherInfo weatherInfo) {
                 showingFallbackCity = true;
-                updateWeatherUi(weatherInfo);
+//                updateWeatherUi(weatherInfo);
+
+                weatherRepository.fetchAirPollution(weatherInfo.getLatitude(), weatherInfo.getLongitude(), weatherInfo, TAG, new WeatherRepository.WeatherCallback() {
+                    @Override
+                    public void onSuccess(WeatherInfo fullyLoadedInfo) {
+                        updateWeatherUi(fullyLoadedInfo);
+                    }
+
+                    @Override
+                    public void onError(String message) {
+                        showWeatherError(message);
+                    }
+                });
+
             }
 
             @Override
@@ -518,6 +557,8 @@ public class MainActivity extends AppCompatActivity {
         txtHelper.setText(helperResId);
         txtHumidityValue.setText("--%");
         txtWindValue.setText("--");
+        txtAQIValue.setText("--");
+        txtUVValue.setText("--");
         progressLoading.setVisibility(View.VISIBLE);
         clearForecastUi();
     }
@@ -535,6 +576,15 @@ public class MainActivity extends AppCompatActivity {
                 weatherInfo.getWindSpeed(),
                 WeatherPreferences.getWindSpeedSuffix(this)
         ));
+        int aqi = weatherInfo.getAqi();
+        if (aqi >= 1 && aqi <= AQI_LEVELS.length) {
+            txtAQIValue.setText(AQI_LEVELS[aqi - 1]);
+        } else {
+            txtAQIValue.setText("N/A");
+        }
+        String uv_value = String.valueOf(weatherInfo.getUv());
+        txtUVValue.setText(uv_value);
+
         progressLoading.setVisibility(View.GONE);
         swipeRefresh.setRefreshing(false);
         loadForecastAfterCurrentWeather(weatherInfo);

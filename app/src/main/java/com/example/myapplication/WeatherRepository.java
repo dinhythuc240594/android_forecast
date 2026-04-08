@@ -1,8 +1,14 @@
 package com.example.myapplication;
 
+import static android.content.ContentValues.TAG;
+
 import android.content.Context;
+import android.location.Address;
+import android.location.Geocoder;
 import android.net.Uri;
+import android.nfc.Tag;
 import android.text.TextUtils;
+import android.util.Log;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.NoConnectionError;
@@ -18,6 +24,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -29,9 +36,11 @@ import java.util.TimeZone;
 
 public class WeatherRepository {
 
-    private static final String BASE_URL = "https://api.openweathermap.org/data/2.5/weather";
+//    private static final String BASE_URL = "https://api.openweathermap.org/data/2.5/weather";
+    private static final String BASE_URL = "https://api.openweathermap.org/data/3.0/onecall";
     private static final String FORECAST_URL = "https://api.openweathermap.org/data/2.5/forecast";
     private static final String GEO_DIRECT_URL = "https://api.openweathermap.org/geo/1.0/direct";
+    private static final String AIR_POLLUTION_URL = "https://api.openweathermap.org/data/2.5/air_pollution";
     private static final int HOURLY_SLOTS = 8;
     private static final int MAX_DAILY_ROWS = 7;
 
@@ -70,6 +79,36 @@ public class WeatherRepository {
         fetchWeather(uri.toString(), requestTag, callback);
     }
 
+    public void fetchAirPollution(double lat, double lon, WeatherInfo currentInfo, Object requestTag, WeatherCallback callback) {
+        Uri uri = Uri.parse(AIR_POLLUTION_URL).buildUpon()
+                .appendQueryParameter("lat", String.valueOf(lat))
+                .appendQueryParameter("lon", String.valueOf(lon))
+                .appendQueryParameter("appid", BuildConfig.WEATHER_API_KEY)
+                .build();
+        Log.e(TAG, uri.toString());
+        // Khởi tạo RequestQueue trực tiếp bằng Context của ứng dụng
+        RequestQueue queue = Volley.newRequestQueue(appContext);
+
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, uri.toString(), null,
+                response -> {
+                    try {
+                        JSONArray list = response.getJSONArray("list");
+                        if (list.length() > 0) {
+                            int aqi = list.getJSONObject(0).getJSONObject("main").getInt("aqi");
+                            currentInfo.setAqi(aqi);
+                        }
+                        callback.onSuccess(currentInfo);
+                    } catch (JSONException e) {
+                        callback.onSuccess(currentInfo);
+                    }
+                },
+                error -> callback.onSuccess(currentInfo)
+        );
+
+        request.setTag(requestTag);
+        queue.add(request); // Thêm vào hàng đợi vừa tạo
+    }
+
     public void fetchWeatherByCity(String cityName, String unit, Object requestTag, WeatherCallback callback) {
         Uri uri = Uri.parse(BASE_URL).buildUpon()
                 .appendQueryParameter("q", cityName)
@@ -77,7 +116,8 @@ public class WeatherRepository {
                 .appendQueryParameter("units", unit)
                 .appendQueryParameter("lang", LanguageHelper.getCurrentLanguage(appContext))
                 .build();
-        fetchWeatherWithGeoFallback(uri.toString(), cityName, unit, requestTag, callback);
+//        fetchWeatherWithGeoFallback(uri.toString(), cityName, unit, requestTag, callback);
+        geocodeDirectThenWeather(cityName, unit, requestTag, callback);
     }
 
     public void fetchForecastByCoordinates(double lat, double lon, String unit, Object requestTag, ForecastCallback callback) {
@@ -115,6 +155,7 @@ public class WeatherRepository {
                         callback.onSuccess(parseWeather(response));
                     } catch (JSONException exception) {
                         callback.onError(appContext.getString(R.string.weather_error_parse));
+                        Log.e(TAG, "message error: " + exception);
                     }
                 },
                 error -> callback.onError(mapError(error))
@@ -257,11 +298,39 @@ public class WeatherRepository {
         return error.networkResponse != null && error.networkResponse.statusCode == 404;
     }
 
+    public String getCityName(double lat, double lon) {
+        String cityName = "Unknown";
+        Geocoder geocoder = new Geocoder(appContext, Locale.getDefault());
+        try {
+            List<Address> addresses = geocoder.getFromLocation(lat, lon, 1);
+            if (addresses != null && addresses.size() > 0) {
+                // Lấy tên thành phố hoặc khu vực hành chính
+                cityName = addresses.get(0).getLocality();
+                if (cityName == null) {
+                    cityName = addresses.get(0).getAdminArea();
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return cityName;
+    }
+
     private WeatherInfo parseWeather(JSONObject response) throws JSONException {
-        String cityName = response.optString("name", appContext.getString(R.string.weather_unknown_location));
-        JSONObject main = response.getJSONObject("main");
-        double temperature = main.getDouble("temp");
-        int humidity = main.optInt("humidity", 0);
+//        String cityName = response.optString("name", appContext.getString(R.string.weather_unknown_location));
+        double latitude = response.optDouble("lat");
+        double longitude = response.optDouble("lon");
+        boolean hasCoordinates = false;
+        String cityName = getCityName(latitude, longitude);
+//        JSONObject main = response.getJSONObject("main");
+        JSONObject current = response.getJSONObject("current");
+        if(!response.isNull("lat") && !response.isNull("lon")){
+            hasCoordinates = true;
+        }
+        double temperature = current.getDouble("temp");
+        int humidity = current.optInt("humidity", 0);
+        double uv = current.optDouble("uvi", 0.0);
+        double windSpeed = current.optDouble("wind_speed", 0.0);
 
         JSONArray weatherArray = response.optJSONArray("weather");
         String description = "";
@@ -269,13 +338,28 @@ public class WeatherRepository {
             description = weatherArray.getJSONObject(0).optString("description", "");
         }
 
-        JSONObject wind = response.optJSONObject("wind");
-        double windSpeed = wind != null ? wind.optDouble("speed", 0) : 0;
+        // 1. Xử lý AQI (Dựa trên cấu trúc của Air Pollution API)
+        // Nếu bạn gộp chung JSON hoặc dùng One Call, nó thường nằm ở list[0].main.aqi
+        int aqi = 0;
 
-        JSONObject coord = response.optJSONObject("coord");
-        boolean hasCoordinates = coord != null;
-        double latitude = hasCoordinates ? coord.optDouble("lat", 0) : 0;
-        double longitude = hasCoordinates ? coord.optDouble("lon", 0) : 0;
+
+//        if (response.has("list")) { // Cấu trúc của Air Pollution API
+//            JSONArray list = response.getJSONArray("list");
+//            if (list.length() > 0) {
+//                aqi = list.getJSONObject(0).getJSONObject("main").getInt("aqi");
+//            }
+//        } else if (response.has("aqi")) { // Trường hợp bạn tự gán thủ công vào object
+//            aqi = response.optInt("aqi", 0);
+//        }
+
+
+//        JSONObject wind = current.optJSONObject("wind");
+//        double windSpeed = wind != null ? wind.optDouble("speed", 0) : 0;
+
+//        JSONObject coord = response.optJSONObject("coord");
+//        boolean hasCoordinates = coord != null;
+//        double latitude = hasCoordinates ? coord.optDouble("lat", 0) : 0;
+//        double longitude = hasCoordinates ? coord.optDouble("lon", 0) : 0;
 
         return new WeatherInfo(
                 cityName,
@@ -283,6 +367,8 @@ public class WeatherRepository {
                 capitalizeDescription(description),
                 humidity,
                 windSpeed,
+                aqi,
+                uv,
                 latitude,
                 longitude,
                 hasCoordinates

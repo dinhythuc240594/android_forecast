@@ -10,7 +10,6 @@
     <string name="stop_ser">Stop Services</string>
     <string name="des_bg_weather">Background weather</string>
     <string name="hello_blank_fragment">Forecast Weather</string>
-    <string name="main_header_subtitle">Live weather, clean layout, and quick actions in one place.</string>
     <string name="main_status_loading_location">Finding location</string>
     <string name="main_status_loading_weather">Updating weather</string>
     <string name="main_status_current_location">Current location</string>

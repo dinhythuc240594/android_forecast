@@ -332,10 +332,18 @@ public class WeatherRepository {
         double uv = current.optDouble("uvi", 0.0);
         double windSpeed = current.optDouble("wind_speed", 0.0);
 
-        JSONArray weatherArray = response.optJSONArray("weather");
+        // One Call 3.x: weather nằm trong "current"; API 2.5 current weather: "weather" ở root
+        JSONArray weatherArray = current.optJSONArray("weather");
+        if (weatherArray == null || weatherArray.length() == 0) {
+            weatherArray = response.optJSONArray("weather");
+        }
         String description = "";
         if (weatherArray != null && weatherArray.length() > 0) {
-            description = weatherArray.getJSONObject(0).optString("description", "");
+            JSONObject w = weatherArray.getJSONObject(0);
+            description = w.optString("description", "");
+            if (TextUtils.isEmpty(description)) {
+                description = w.optString("main", "");
+            }
         }
 
         // 1. Xử lý AQI (Dựa trên cấu trúc của Air Pollution API)

@@ -62,7 +62,6 @@ public class MainActivity extends AppCompatActivity {
     private TextView txtCitySticky;
     private TextView txtTemp;
     private TextView txtDesc;
-    private TextView txtHelper;
     private TextView txtHumidityValue;
     private TextView txtWindValue;
     private TextView txtAQIValue;
@@ -124,7 +123,6 @@ public class MainActivity extends AppCompatActivity {
                 TypedValue.COMPLEX_UNIT_DIP, 8f, getResources().getDisplayMetrics());
         txtTemp = findViewById(R.id.txtTemp);
         txtDesc = findViewById(R.id.txtDesc);
-        txtHelper = findViewById(R.id.txtHelper);
         txtHumidityValue = findViewById(R.id.txtHumidityValue);
         txtWindValue = findViewById(R.id.txtWindValue);
         txtAQIValue = findViewById(R.id.txtAQI);
@@ -365,8 +363,7 @@ public class MainActivity extends AppCompatActivity {
         weatherRepository.cancel(WEATHER_REQUEST_TAG);
         showLoadingState(
                 R.string.main_status_loading_weather,
-                getString(R.string.main_loading_city),
-                R.string.main_helper_syncing
+                getString(R.string.main_loading_city)
         );
 
         weatherRepository.fetchWeatherByCoordinates(lat, lon, currentUnit, WEATHER_REQUEST_TAG, new WeatherRepository.WeatherCallback() {
@@ -428,8 +425,7 @@ public class MainActivity extends AppCompatActivity {
 
         showLoadingState(
                 R.string.main_status_loading_location,
-                getString(R.string.main_loading_city),
-                R.string.main_helper_locating
+                getString(R.string.main_loading_city)
         );
         startLocationTimeout();
         fusedLocationClient.getLastLocation()
@@ -482,8 +478,7 @@ public class MainActivity extends AppCompatActivity {
 
         showLoadingState(
                 R.string.main_status_fallback,
-                getString(R.string.main_loading_fallback_city),
-                R.string.main_helper_fallback
+                getString(R.string.main_loading_fallback_city)
         );
 
         weatherRepository.fetchWeatherByCity(DEFAULT_CITY, currentUnit, WEATHER_REQUEST_TAG, new WeatherRepository.WeatherCallback() {
@@ -549,12 +544,11 @@ public class MainActivity extends AppCompatActivity {
         return locationManager != null && LocationManagerCompat.isLocationEnabled(locationManager);
     }
 
-    private void showLoadingState(int statusResId, String cityText, int helperResId) {
+    private void showLoadingState(int statusResId, String cityText) {
         txtStatus.setText(statusResId);
         setCityText(cityText);
         txtTemp.setText("--");
         txtDesc.setText(R.string.main_weather_placeholder);
-        txtHelper.setText(helperResId);
         txtHumidityValue.setText("--%");
         txtWindValue.setText("--");
         txtAQIValue.setText("--");
@@ -568,7 +562,6 @@ public class MainActivity extends AppCompatActivity {
         setCityText(weatherInfo.getCityName());
         txtTemp.setText(Math.round(weatherInfo.getTemperature()) + WeatherPreferences.getTemperatureUnitSymbol(this));
         txtDesc.setText(weatherInfo.getDescription());
-        txtHelper.setText(showingFallbackCity ? R.string.main_helper_fallback : R.string.main_helper_current_location);
         txtHumidityValue.setText(weatherInfo.getHumidity() + "%");
         txtWindValue.setText(String.format(
                 Locale.getDefault(),
@@ -595,7 +588,6 @@ public class MainActivity extends AppCompatActivity {
         setCityText(R.string.main_status_missing_config);
         txtTemp.setText("--");
         txtDesc.setText(R.string.main_helper_missing_api_key);
-        txtHelper.setText(R.string.main_helper_missing_api_key);
         txtHumidityValue.setText("--%");
         txtWindValue.setText("--");
         progressLoading.setVisibility(View.GONE);
@@ -609,7 +601,6 @@ public class MainActivity extends AppCompatActivity {
         setCityText(R.string.main_status_error);
         txtTemp.setText("--");
         txtDesc.setText(message);
-        txtHelper.setText(R.string.main_helper_retry);
         txtHumidityValue.setText("--%");
         txtWindValue.setText("--");
         progressLoading.setVisibility(View.GONE);

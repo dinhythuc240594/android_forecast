@@ -8,7 +8,6 @@
     <string name="start_ser">Xem thời tiết</string>
     <string name="stop_ser">Thoát</string>
     <string name="des_bg_weather">Hình nền thời tiết</string>
-    <string name="main_header_subtitle">Xem thời tiết nhanh, rõ ràng và thao tác dễ hơn mỗi ngày.</string>
     <string name="main_status_loading_location">Đang tìm vị trí</string>
     <string name="main_status_loading_weather">Đang cập nhật</string>
     <string name="main_status_current_location">Vị trí hiện tại</string>

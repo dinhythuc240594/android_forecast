@@ -5,6 +5,7 @@ import static android.content.ContentValues.TAG;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -18,6 +19,7 @@ import com.google.android.material.progressindicator.LinearProgressIndicator;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.Executors;
 
 public class DetailActivity extends AppCompatActivity {
 
@@ -32,17 +34,19 @@ public class DetailActivity extends AppCompatActivity {
     private View layoutForecastSections;
     private RecyclerView rvHourly;
     private RecyclerView rvDaily;
+    private ImageButton btnFavorite;
+    private WeatherAnimationView weatherAnimationView;
     private final List<HourlyForecast> hourlyForecastItems = new ArrayList<>();
     private final List<DailyForecast> dailyForecastItems = new ArrayList<>();
     private HourlyForecastAdapter hourlyForecastAdapter;
     private DailyForecastAdapter dailyForecastAdapter;
     private WeatherRepository weatherRepository;
-    /** Tên hiển thị (tiếng Việt từ API địa phương hoặc tên người dùng chọn). */
     private String displayCityName;
-    /** Tham số {@code q} gửi OpenWeather; có thể dạng "Hà Nội,VN". */
     private String weatherQuery;
     private String currentUnit;
     private String currentLanguage;
+    private boolean isFavorite;
+    private WeatherInfo lastWeatherInfo;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,6 +66,8 @@ public class DetailActivity extends AppCompatActivity {
         rvHourly = findViewById(R.id.rvHourly);
         rvDaily = findViewById(R.id.rvDaily);
         MaterialButton btnBack = findViewById(R.id.btnBack);
+        btnFavorite = findViewById(R.id.btnFavorite);
+        weatherAnimationView = findViewById(R.id.weatherAnimationView);
         progressDetailLoading = findViewById(R.id.progressDetailLoading);
         weatherRepository = new WeatherRepository(this);
         currentUnit = WeatherPreferences.getUnit(this);
@@ -84,6 +90,18 @@ public class DetailActivity extends AppCompatActivity {
         if (weatherQuery == null || weatherQuery.isEmpty()) {
             weatherQuery = displayCityName;
         }
+
+        btnFavorite.setOnClickListener(v -> toggleFavorite());
+        loadFavoriteState();
+
+        findViewById(R.id.cardAqi).setOnClickListener(v -> {
+            if (lastWeatherInfo != null && lastWeatherInfo.hasCoordinates()) {
+                startActivity(AqiDetailActivity.newIntent(this,
+                        lastWeatherInfo.getLatitude(),
+                        lastWeatherInfo.getLongitude(),
+                        displayCityName));
+            }
+        });
 
         if (displayCityName != null && !displayCityName.isEmpty()) {
             txtDetailCity.setText(displayCityName);
@@ -115,6 +133,45 @@ public class DetailActivity extends AppCompatActivity {
         weatherRepository.cancel(WEATHER_REQUEST_TAG);
         weatherRepository.cancel(FORECAST_REQUEST_TAG);
         progressDetailLoading.setVisibility(View.GONE);
+        weatherAnimationView.stopAnimation();
+    }
+
+    private void loadFavoriteState() {
+        if (displayCityName == null) return;
+        Executors.newSingleThreadExecutor().execute(() -> {
+            FavoriteCityDao dao = AppDatabase.getInstance(this).favoriteCityDao();
+            boolean fav = dao.countByName(displayCityName) > 0;
+            runOnUiThread(() -> {
+                isFavorite = fav;
+                updateFavoriteIcon();
+            });
+        });
+    }
+
+    private void toggleFavorite() {
+        if (displayCityName == null) return;
+        Executors.newSingleThreadExecutor().execute(() -> {
+            FavoriteCityDao dao = AppDatabase.getInstance(this).favoriteCityDao();
+            if (isFavorite) {
+                dao.deleteByName(displayCityName);
+                runOnUiThread(() -> {
+                    isFavorite = false;
+                    updateFavoriteIcon();
+                    Toast.makeText(this, R.string.detail_removed_favorite, Toast.LENGTH_SHORT).show();
+                });
+            } else {
+                dao.insert(new FavoriteCity(displayCityName, weatherQuery, System.currentTimeMillis()));
+                runOnUiThread(() -> {
+                    isFavorite = true;
+                    updateFavoriteIcon();
+                    Toast.makeText(this, R.string.detail_added_favorite, Toast.LENGTH_SHORT).show();
+                });
+            }
+        });
+    }
+
+    private void updateFavoriteIcon() {
+        btnFavorite.setImageResource(isFavorite ? R.drawable.ic_favorite_filled : R.drawable.ic_favorite_border);
     }
 
     private void fetchWeatherDetails() {
@@ -147,6 +204,14 @@ public class DetailActivity extends AppCompatActivity {
                         }
                         String uv_value = String.valueOf(fullyweatherInfo.getUv());
                         txtUV.setText(uv_value);
+
+                        cacheWeatherData(fullyweatherInfo);
+                        lastWeatherInfo = fullyweatherInfo;
+
+                        int hour = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY);
+                        boolean isNight = hour < 6 || hour >= 19;
+                        weatherAnimationView.setWeather(fullyweatherInfo.getWeatherId(), isNight);
+                        weatherAnimationView.startAnimation();
                     }
 
                     @Override
@@ -163,6 +228,14 @@ public class DetailActivity extends AppCompatActivity {
                 progressDetailLoading.setVisibility(View.GONE);
                 showWeatherError(message);
             }
+        });
+    }
+
+    private void cacheWeatherData(WeatherInfo info) {
+        if (weatherQuery == null) return;
+        Executors.newSingleThreadExecutor().execute(() -> {
+            CachedWeatherDao dao = AppDatabase.getInstance(this).cachedWeatherDao();
+            dao.insertOrUpdate(CachedWeather.fromWeatherInfo(weatherQuery, info, currentUnit));
         });
     }
 
@@ -196,7 +269,6 @@ public class DetailActivity extends AppCompatActivity {
 
             @Override
             public void onError(String message) {
-                // Giữ phần tóm tắt hiện tại; không chặn màn chi tiết
             }
         };
         if (weatherInfo.hasCoordinates()) {

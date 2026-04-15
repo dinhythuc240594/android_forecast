@@ -56,6 +56,12 @@ public class WeatherRepository {
         void onError(String message);
     }
 
+    public interface AirQualityCallback {
+        void onSuccess(AirQualityData data);
+
+        void onError(String message);
+    }
+
     private final RequestQueue requestQueue;
     private final Context appContext;
 
@@ -107,6 +113,46 @@ public class WeatherRepository {
 
         request.setTag(requestTag);
         queue.add(request); // Thêm vào hàng đợi vừa tạo
+    }
+
+    public void fetchAirQualityDetail(double lat, double lon, Object requestTag, AirQualityCallback callback) {
+        Uri uri = Uri.parse(AIR_POLLUTION_URL).buildUpon()
+                .appendQueryParameter("lat", String.valueOf(lat))
+                .appendQueryParameter("lon", String.valueOf(lon))
+                .appendQueryParameter("appid", BuildConfig.WEATHER_API_KEY)
+                .build();
+
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, uri.toString(), null,
+                response -> {
+                    try {
+                        JSONArray list = response.getJSONArray("list");
+                        if (list.length() > 0) {
+                            JSONObject item = list.getJSONObject(0);
+                            int aqi = item.getJSONObject("main").getInt("aqi");
+                            JSONObject comp = item.getJSONObject("components");
+                            AirQualityData data = new AirQualityData(
+                                    aqi,
+                                    comp.optDouble("co", 0),
+                                    comp.optDouble("no", 0),
+                                    comp.optDouble("no2", 0),
+                                    comp.optDouble("o3", 0),
+                                    comp.optDouble("so2", 0),
+                                    comp.optDouble("pm2_5", 0),
+                                    comp.optDouble("pm10", 0),
+                                    comp.optDouble("nh3", 0)
+                            );
+                            callback.onSuccess(data);
+                        } else {
+                            callback.onError(appContext.getString(R.string.weather_error_parse));
+                        }
+                    } catch (JSONException e) {
+                        callback.onError(appContext.getString(R.string.weather_error_parse));
+                    }
+                },
+                error -> callback.onError(mapError(error))
+        );
+        request.setTag(requestTag);
+        requestQueue.add(request);
     }
 
     public void fetchWeatherByCity(String cityName, String unit, Object requestTag, WeatherCallback callback) {
@@ -338,36 +384,17 @@ public class WeatherRepository {
             weatherArray = response.optJSONArray("weather");
         }
         String description = "";
+        int weatherId = 800;
         if (weatherArray != null && weatherArray.length() > 0) {
             JSONObject w = weatherArray.getJSONObject(0);
             description = w.optString("description", "");
+            weatherId = w.optInt("id", 800);
             if (TextUtils.isEmpty(description)) {
                 description = w.optString("main", "");
             }
         }
 
-        // 1. Xử lý AQI (Dựa trên cấu trúc của Air Pollution API)
-        // Nếu bạn gộp chung JSON hoặc dùng One Call, nó thường nằm ở list[0].main.aqi
         int aqi = 0;
-
-
-//        if (response.has("list")) { // Cấu trúc của Air Pollution API
-//            JSONArray list = response.getJSONArray("list");
-//            if (list.length() > 0) {
-//                aqi = list.getJSONObject(0).getJSONObject("main").getInt("aqi");
-//            }
-//        } else if (response.has("aqi")) { // Trường hợp bạn tự gán thủ công vào object
-//            aqi = response.optInt("aqi", 0);
-//        }
-
-
-//        JSONObject wind = current.optJSONObject("wind");
-//        double windSpeed = wind != null ? wind.optDouble("speed", 0) : 0;
-
-//        JSONObject coord = response.optJSONObject("coord");
-//        boolean hasCoordinates = coord != null;
-//        double latitude = hasCoordinates ? coord.optDouble("lat", 0) : 0;
-//        double longitude = hasCoordinates ? coord.optDouble("lon", 0) : 0;
 
         return new WeatherInfo(
                 cityName,
@@ -379,7 +406,8 @@ public class WeatherRepository {
                 uv,
                 latitude,
                 longitude,
-                hasCoordinates
+                hasCoordinates,
+                weatherId
         );
     }
 

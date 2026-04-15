@@ -40,11 +40,13 @@ import com.google.android.gms.location.Priority;
 import com.google.android.gms.tasks.CancellationTokenSource;
 import com.google.android.material.progressindicator.LinearProgressIndicator;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.Executors;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -102,6 +104,10 @@ public class MainActivity extends AppCompatActivity {
     private int cityStickyScrollThresholdPx;
     private boolean stickyHeaderVisible;
     private int stickyScrollSlopPx;
+
+    private WeatherAnimationView weatherAnimationView;
+    private int currentWeatherId = 800;
+    private WeatherInfo lastWeatherInfo;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -168,6 +174,17 @@ public class MainActivity extends AppCompatActivity {
 
         setupDynamicBackground();
 
+        weatherAnimationView = findViewById(R.id.weatherAnimationView);
+
+        findViewById(R.id.cardAqi).setOnClickListener(v -> {
+            if (lastWeatherInfo != null && lastWeatherInfo.hasCoordinates()) {
+                startActivity(AqiDetailActivity.newIntent(this,
+                        lastWeatherInfo.getLatitude(),
+                        lastWeatherInfo.getLongitude(),
+                        lastWeatherInfo.getCityName()));
+            }
+        });
+
         if (WeatherRepository.hasApiKey()) {
             getLocation();
         } else {
@@ -188,6 +205,8 @@ public class MainActivity extends AppCompatActivity {
             startShimmerAnimation(nowDay);
         }
         scheduleBackgroundTimeCheck();
+        weatherAnimationView.setWeather(currentWeatherId, !nowDay);
+        weatherAnimationView.startAnimation();
 
         nestedScrollMain.post(() -> {
             remeasureCityStickyThreshold();
@@ -215,6 +234,7 @@ public class MainActivity extends AppCompatActivity {
         cancelLocationTimeout();
         swipeRefresh.setRefreshing(false);
         stopBackgroundUpdates();
+        weatherAnimationView.stopAnimation();
     }
 
     private void setupStickyCityHeader() {
@@ -558,6 +578,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateWeatherUi(WeatherInfo weatherInfo) {
+        lastWeatherInfo = weatherInfo;
         txtStatus.setText(showingFallbackCity ? R.string.main_status_fallback : R.string.main_status_current_location);
         setCityText(weatherInfo.getCityName());
         txtTemp.setText(Math.round(weatherInfo.getTemperature()) + WeatherPreferences.getTemperatureUnitSymbol(this));
@@ -580,7 +601,63 @@ public class MainActivity extends AppCompatActivity {
 
         progressLoading.setVisibility(View.GONE);
         swipeRefresh.setRefreshing(false);
+
+        currentWeatherId = weatherInfo.getWeatherId();
+        weatherAnimationView.setWeather(currentWeatherId, !isLocalDayTime());
+        weatherAnimationView.startAnimation();
+
         loadForecastAfterCurrentWeather(weatherInfo);
+        cacheCurrentWeather(weatherInfo);
+    }
+
+    private void cacheCurrentWeather(WeatherInfo info) {
+        String key = showingFallbackCity ? DEFAULT_CITY : "current_location";
+        Executors.newSingleThreadExecutor().execute(() -> {
+            CachedWeatherDao dao = AppDatabase.getInstance(this).cachedWeatherDao();
+            dao.insertOrUpdate(CachedWeather.fromWeatherInfo(key, info, currentUnit));
+            long oneDayAgo = System.currentTimeMillis() - 24L * 60L * 60L * 1000L;
+            dao.deleteOlderThan(oneDayAgo);
+        });
+    }
+
+    private void showCachedWeather() {
+        String key = showingFallbackCity ? DEFAULT_CITY : "current_location";
+        String unit = WeatherPreferences.getUnit(this);
+        Executors.newSingleThreadExecutor().execute(() -> {
+            CachedWeatherDao dao = AppDatabase.getInstance(this).cachedWeatherDao();
+            CachedWeather cached = dao.get(key, unit);
+            if (cached != null) {
+                WeatherInfo info = cached.toWeatherInfo();
+                long updatedAt = cached.updatedAt;
+                runOnUiThread(() -> {
+                    txtStatus.setText(R.string.main_status_cached);
+                    setCityText(info.getCityName());
+                    txtTemp.setText(Math.round(info.getTemperature()) + WeatherPreferences.getTemperatureUnitSymbol(this));
+                    SimpleDateFormat sdf = new SimpleDateFormat("HH:mm", Locale.getDefault());
+                    String timeStr = sdf.format(new Date(updatedAt));
+                    txtDesc.setText(getString(R.string.main_cached_time_fmt, timeStr));
+                    txtHumidityValue.setText(info.getHumidity() + "%");
+                    txtWindValue.setText(String.format(
+                            Locale.getDefault(),
+                            "%.1f%s",
+                            info.getWindSpeed(),
+                            WeatherPreferences.getWindSpeedSuffix(this)
+                    ));
+                    int aqi = info.getAqi();
+                    if (aqi >= 1 && aqi <= AQI_LEVELS.length) {
+                        txtAQIValue.setText(AQI_LEVELS[aqi - 1]);
+                    } else {
+                        txtAQIValue.setText("N/A");
+                    }
+                    txtUVValue.setText(String.valueOf(info.getUv()));
+                    progressLoading.setVisibility(View.GONE);
+                    swipeRefresh.setRefreshing(false);
+                    currentWeatherId = info.getWeatherId();
+                    weatherAnimationView.setWeather(currentWeatherId, !isLocalDayTime());
+                    weatherAnimationView.startAnimation();
+                });
+            }
+        });
     }
 
     private void showMissingApiKey() {
@@ -607,6 +684,7 @@ public class MainActivity extends AppCompatActivity {
         swipeRefresh.setRefreshing(false);
         clearForecastUi();
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+        showCachedWeather();
     }
 
     private void clearForecastUi() {

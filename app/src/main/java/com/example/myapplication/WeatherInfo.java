@@ -12,6 +12,7 @@ public class WeatherInfo {
     private final double latitude;
     private final double longitude;
     private final boolean hasCoordinates;
+    private final int weatherId;
 
     public WeatherInfo(
             String cityName,
@@ -23,7 +24,8 @@ public class WeatherInfo {
             double uv,
             double latitude,
             double longitude,
-            boolean hasCoordinates
+            boolean hasCoordinates,
+            int weatherId
     ) {
         this.cityName = cityName;
         this.temperature = temperature;
@@ -35,6 +37,7 @@ public class WeatherInfo {
         this.hasCoordinates = hasCoordinates;
         this.aqi = aqi;
         this.uv = uv;
+        this.weatherId = weatherId;
     }
 
     public String getCityName() {
@@ -79,5 +82,9 @@ public class WeatherInfo {
 
     public double getLongitude() {
         return longitude;
+    }
+
+    public int getWeatherId() {
+        return weatherId;
     }
 }

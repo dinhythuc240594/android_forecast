@@ -35,6 +35,12 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:background="@drawable/bg_main_day_shimmer" />
+
+        <com.example.myapplication.WeatherAnimationView
+            android:id="@+id/weatherAnimationView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone" />
     </FrameLayout>
 
     <View
@@ -281,9 +287,12 @@
                         android:weightSum="2">
 
                         <com.google.android.material.card.MaterialCardView
+                            android:id="@+id/cardAqi"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
+                            android:clickable="true"
+                            android:focusable="true"
                             app:cardBackgroundColor="@color/home_metric_surface"
                             app:cardCornerRadius="20dp"
                             app:cardElevation="0dp">

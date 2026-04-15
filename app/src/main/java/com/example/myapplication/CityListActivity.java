@@ -8,6 +8,7 @@ import android.text.TextWatcher;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -27,8 +28,11 @@ import org.json.JSONObject;
 
 import java.text.Collator;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
+import java.util.concurrent.Executors;
 
 public class CityListActivity extends AppCompatActivity {
 
@@ -39,9 +43,13 @@ public class CityListActivity extends AppCompatActivity {
     private static final String PROVINCES_REQUEST_TAG = "vn_provinces";
 
     private RecyclerView rvCities;
+    private RecyclerView rvFavorites;
+    private TextView txtFavoritesHeader;
+    private TextView txtAllCitiesHeader;
     private ProgressBar progressCityList;
     private TextInputEditText editSearchCity;
     private CityAdapter cityAdapter;
+    private CityAdapter favoritesAdapter;
     private RequestQueue requestQueue;
 
     @Override
@@ -59,18 +67,28 @@ public class CityListActivity extends AppCompatActivity {
         toolbar.setNavigationOnClickListener(v -> getOnBackPressedDispatcher().onBackPressed());
 
         rvCities = findViewById(R.id.rvCities);
+        rvFavorites = findViewById(R.id.rvFavorites);
+        txtFavoritesHeader = findViewById(R.id.txtFavoritesHeader);
+        txtAllCitiesHeader = findViewById(R.id.txtAllCitiesHeader);
         progressCityList = findViewById(R.id.progressCityList);
         editSearchCity = findViewById(R.id.editSearchCity);
         rvCities.setHasFixedSize(true);
         rvCities.setLayoutManager(new LinearLayoutManager(this));
 
-        cityAdapter = new CityAdapter(item -> {
+        CityAdapter.OnItemClickListener itemClickListener = item -> {
             Intent intent = new Intent(CityListActivity.this, DetailActivity.class);
             intent.putExtra("CITY_NAME", item.displayName);
             intent.putExtra("WEATHER_QUERY", item.weatherQuery);
             startActivity(intent);
-        });
+        };
+
+        cityAdapter = new CityAdapter(itemClickListener);
         rvCities.setAdapter(cityAdapter);
+
+        favoritesAdapter = new CityAdapter(itemClickListener);
+        rvFavorites.setLayoutManager(new LinearLayoutManager(this));
+        rvFavorites.setAdapter(favoritesAdapter);
+        rvFavorites.setNestedScrollingEnabled(false);
 
         editSearchCity.addTextChangedListener(new TextWatcher() {
             @Override
@@ -79,7 +97,12 @@ public class CityListActivity extends AppCompatActivity {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                cityAdapter.filter(s != null ? s.toString() : "");
+                String query = s != null ? s.toString() : "";
+                cityAdapter.filter(query);
+                boolean searching = !query.trim().isEmpty();
+                txtFavoritesHeader.setVisibility(searching ? View.GONE : txtFavoritesHeader.getVisibility());
+                rvFavorites.setVisibility(searching ? View.GONE : rvFavorites.getVisibility());
+                txtAllCitiesHeader.setVisibility(searching ? View.GONE : txtAllCitiesHeader.getVisibility());
             }
 
             @Override
@@ -99,6 +122,40 @@ public class CityListActivity extends AppCompatActivity {
 
         requestQueue = Volley.newRequestQueue(this);
         loadProvinces();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        loadFavorites();
+    }
+
+    private void loadFavorites() {
+        Executors.newSingleThreadExecutor().execute(() -> {
+            FavoriteCityDao dao = AppDatabase.getInstance(this).favoriteCityDao();
+            List<FavoriteCity> favs = dao.getAll();
+            List<ProvinceItem> favItems = new ArrayList<>();
+            Set<String> favNames = new HashSet<>();
+            for (FavoriteCity fav : favs) {
+                favItems.add(new ProvinceItem(fav.cityName, fav.weatherQuery));
+                favNames.add(fav.cityName);
+            }
+            runOnUiThread(() -> {
+                cityAdapter.setFavoriteNames(favNames);
+                if (favItems.isEmpty()) {
+                    txtFavoritesHeader.setVisibility(View.GONE);
+                    rvFavorites.setVisibility(View.GONE);
+                    txtAllCitiesHeader.setVisibility(View.GONE);
+                } else {
+                    favoritesAdapter.setMasterList(favItems);
+                    Set<String> favNamesForAdapter = new HashSet<>(favNames);
+                    favoritesAdapter.setFavoriteNames(favNamesForAdapter);
+                    txtFavoritesHeader.setVisibility(View.VISIBLE);
+                    rvFavorites.setVisibility(View.VISIBLE);
+                    txtAllCitiesHeader.setVisibility(View.VISIBLE);
+                }
+            });
+        });
     }
 
     private void loadProvinces() {

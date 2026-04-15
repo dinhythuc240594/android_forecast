@@ -3,6 +3,7 @@ package com.example.myapplication;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -10,12 +11,15 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.text.Normalizer;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class CityAdapter extends RecyclerView.Adapter<CityAdapter.CityViewHolder> {
 
     private final List<ProvinceItem> masterList = new ArrayList<>();
     private final List<ProvinceItem> cityList = new ArrayList<>();
+    private final Set<String> favoriteNames = new HashSet<>();
     private final OnItemClickListener listener;
 
     public interface OnItemClickListener {
@@ -36,6 +40,14 @@ public class CityAdapter extends RecyclerView.Adapter<CityAdapter.CityViewHolder
         notifyDataSetChanged();
     }
 
+    public void setFavoriteNames(Set<String> names) {
+        favoriteNames.clear();
+        if (names != null) {
+            favoriteNames.addAll(names);
+        }
+        notifyDataSetChanged();
+    }
+
     public void filter(String query) {
         cityList.clear();
         if (query == null || query.trim().isEmpty()) {
@@ -51,9 +63,6 @@ public class CityAdapter extends RecyclerView.Adapter<CityAdapter.CityViewHolder
         notifyDataSetChanged();
     }
 
-    /**
-     * So khớp không phân biệt hoa thường và bỏ dấu (ví dụ "ha noi" khớp "Hà Nội").
-     */
     private static String normalizeForSearch(String s) {
         if (s == null) {
             return "";
@@ -83,6 +92,12 @@ public class CityAdapter extends RecyclerView.Adapter<CityAdapter.CityViewHolder
         holder.itemView.setContentDescription(
                 holder.itemView.getContext().getString(R.string.city_list_item_cd_city, item.displayName));
 
+        boolean isFav = favoriteNames.contains(item.displayName);
+        holder.imgFavorite.setVisibility(isFav ? View.VISIBLE : View.GONE);
+        if (isFav) {
+            holder.imgFavorite.setImageResource(R.drawable.ic_favorite_filled);
+        }
+
         holder.itemView.setOnClickListener(v -> {
             if (listener != null) {
                 listener.onItemClick(item);
@@ -97,10 +112,12 @@ public class CityAdapter extends RecyclerView.Adapter<CityAdapter.CityViewHolder
 
     public static class CityViewHolder extends RecyclerView.ViewHolder {
         TextView txtCityName;
+        ImageView imgFavorite;
 
         public CityViewHolder(@NonNull View itemView) {
             super(itemView);
             txtCityName = itemView.findViewById(R.id.txtCityName);
+            imgFavorite = itemView.findViewById(R.id.imgFavorite);
         }
     }
 }

@@ -18,6 +18,16 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <com.example.myapplication.WeatherAnimationView
+        android:id="@+id/weatherAnimationView"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
     <View
         android:layout_width="0dp"
         android:layout_height="0dp"
@@ -47,24 +57,40 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnBack"
-                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="start"
                 android:layout_marginBottom="8dp"
-                android:contentDescription="@string/detail_back"
-                android:insetTop="0dp"
-                android:insetBottom="0dp"
-                android:minHeight="48dp"
-                android:text="@string/detail_back"
-                android:textAllCaps="false"
-                android:textColor="@color/white"
-                app:backgroundTint="#14FFFFFF"
-                app:cornerRadius="18dp"
-                app:strokeColor="@color/home_card_stroke"
-                app:strokeWidth="1dp" />
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnBack"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:contentDescription="@string/detail_back"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:minHeight="48dp"
+                    android:text="@string/detail_back"
+                    android:textAllCaps="false"
+                    android:textColor="@color/white"
+                    app:backgroundTint="#14FFFFFF"
+                    app:cornerRadius="18dp"
+                    app:strokeColor="@color/home_card_stroke"
+                    app:strokeWidth="1dp" />
+
+                <ImageButton
+                    android:id="@+id/btnFavorite"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="@string/detail_favorite_cd"
+                    android:padding="8dp"
+                    android:src="@drawable/ic_favorite_border" />
+            </LinearLayout>
 
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
@@ -214,9 +240,12 @@
                         android:weightSum="2">
 
                         <com.google.android.material.card.MaterialCardView
+                            android:id="@+id/cardAqi"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
+                            android:clickable="true"
+                            android:focusable="true"
                             app:cardBackgroundColor="@color/home_metric_surface"
                             app:cardCornerRadius="20dp"
                             app:cardElevation="0dp">

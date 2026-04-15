@@ -5,8 +5,6 @@
     <string name="reload_btn">Làm mới</string>
     <string name="weather">Thời tiết</string>
     <string name="des_ico_weather">Biểu tượng thời tiết</string>
-    <string name="start_ser">Xem thời tiết</string>
-    <string name="stop_ser">Thoát</string>
     <string name="des_bg_weather">Hình nền thời tiết</string>
     <string name="main_status_loading_location">Đang tìm vị trí</string>
     <string name="main_status_loading_weather">Đang cập nhật</string>
@@ -76,4 +74,39 @@
     <string name="main_forecast_rain_symbol" translatable="false">💧</string>
     <string name="main_forecast_icon_day_cd">Thời tiết ban ngày</string>
     <string name="main_forecast_icon_night_cd">Thời tiết ban đêm</string>
+    <string name="detail_favorite_cd">Yêu thích</string>
+    <string name="detail_added_favorite">Đã thêm vào yêu thích</string>
+    <string name="detail_removed_favorite">Đã xóa khỏi yêu thích</string>
+    <string name="city_list_favorites_header">Yêu thích</string>
+    <string name="city_list_all_header">Tất cả tỉnh/thành</string>
+    <string name="main_status_cached">Dữ liệu lưu tạm</string>
+    <string name="main_cached_time_fmt">Cập nhật %1$s</string>
+    <string name="notif_channel_name">Thời tiết hàng ngày</string>
+    <string name="notif_channel_desc">Hiển thị dự báo thời tiết mỗi ngày vào giờ bạn chọn.</string>
+    <string name="settings_notif_title">Thông báo hàng ngày</string>
+    <string name="settings_notif_hint">Nhận tóm tắt thời tiết qua thông báo mỗi ngày.</string>
+    <string name="settings_notif_enable">Bật thông báo hàng ngày</string>
+    <string name="settings_notif_time">Giờ thông báo</string>
+    <string name="settings_notif_time_fmt">Mỗi ngày lúc %1$s</string>
+    <string name="settings_notif_scheduled">Đã lên lịch thông báo lúc %1$s</string>
+    <string name="settings_notif_cancelled">Đã tắt thông báo hàng ngày</string>
+    <string name="settings_notif_permission_needed">Vui lòng cho phép thông báo trong hộp thoại quyền.</string>
+    <string name="aqi_title">Chỉ số chất lượng không khí</string>
+    <string name="aqi_pollutants_title">Chi tiết chất ô nhiễm</string>
+    <string name="aqi_error_no_location">Thiếu dữ liệu vị trí.</string>
+    <string name="aqi_tap_hint">Nhấn để xem chi tiết</string>
+    <string-array name="aqi_levels">
+        <item>Tốt</item>
+        <item>Khá</item>
+        <item>Trung bình</item>
+        <item>Kém</item>
+        <item>Rất kém</item>
+    </string-array>
+    <string-array name="aqi_advices">
+        <item>Chất lượng không khí tốt, ít hoặc không ảnh hưởng sức khỏe. Bạn có thể thoải mái hoạt động ngoài trời.</item>
+        <item>Chất lượng không khí chấp nhận được. Những người đặc biệt nhạy cảm nên hạn chế hoạt động ngoài trời kéo dài.</item>
+        <item>Nhóm nhạy cảm có thể bị ảnh hưởng sức khỏe. Người bình thường ít bị tác động hơn.</item>
+        <item>Mọi người có thể bắt đầu cảm nhận ảnh hưởng sức khỏe. Nhóm nhạy cảm có thể chịu ảnh hưởng nghiêm trọng hơn.</item>
+        <item>Cảnh báo sức khỏe — mọi người đều có thể bị ảnh hưởng nghiêm trọng. Hạn chế ra ngoài.</item>
+    </string-array>
 </resources>

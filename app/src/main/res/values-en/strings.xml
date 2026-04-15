@@ -5,8 +5,6 @@
     <string name="reload_btn">Refresh</string>
     <string name="weather">Weather</string>
     <string name="des_ico_weather">Icon weather</string>
-    <string name="start_ser">Start Services</string>
-    <string name="stop_ser">Stop Services</string>
     <string name="des_bg_weather">Background weather</string>
     <string name="main_status_loading_location">Finding location</string>
     <string name="main_status_loading_weather">Updating weather</string>
@@ -76,4 +74,39 @@
     <string name="main_forecast_rain_symbol" translatable="false">💧</string>
     <string name="main_forecast_icon_day_cd">Daytime conditions</string>
     <string name="main_forecast_icon_night_cd">Night conditions</string>
+    <string name="detail_favorite_cd">Toggle favorite</string>
+    <string name="detail_added_favorite">Added to favorites</string>
+    <string name="detail_removed_favorite">Removed from favorites</string>
+    <string name="city_list_favorites_header">Favorites</string>
+    <string name="city_list_all_header">All provinces</string>
+    <string name="main_status_cached">Cached data</string>
+    <string name="main_cached_time_fmt">Updated %1$s</string>
+    <string name="notif_channel_name">Daily weather</string>
+    <string name="notif_channel_desc">Shows the weather forecast once a day at a chosen time.</string>
+    <string name="settings_notif_title">Daily notification</string>
+    <string name="settings_notif_hint">Get a weather summary pushed to your notification shade every day.</string>
+    <string name="settings_notif_enable">Enable daily notification</string>
+    <string name="settings_notif_time">Notification time</string>
+    <string name="settings_notif_time_fmt">Every day at %1$s</string>
+    <string name="settings_notif_scheduled">Daily notification scheduled at %1$s</string>
+    <string name="settings_notif_cancelled">Daily notification turned off</string>
+    <string name="settings_notif_permission_needed">Please allow notifications in the permission dialog.</string>
+    <string name="aqi_title">Air Quality Index</string>
+    <string name="aqi_pollutants_title">Pollutant breakdown</string>
+    <string name="aqi_error_no_location">Location data is missing.</string>
+    <string name="aqi_tap_hint">Tap for details</string>
+    <string-array name="aqi_levels">
+        <item>Good</item>
+        <item>Fair</item>
+        <item>Moderate</item>
+        <item>Poor</item>
+        <item>Very poor</item>
+    </string-array>
+    <string-array name="aqi_advices">
+        <item>Air quality is satisfactory and poses little or no health risk. Enjoy outdoor activities.</item>
+        <item>Air quality is acceptable. Unusually sensitive people should consider limiting prolonged outdoor exertion.</item>
+        <item>Members of sensitive groups may experience health effects. The general public is less likely to be affected.</item>
+        <item>Everyone may begin to experience health effects. Members of sensitive groups may experience more serious effects.</item>
+        <item>Health alert — everyone may experience serious health effects. Avoid outdoor activities.</item>
+    </string-array>
 </resources>

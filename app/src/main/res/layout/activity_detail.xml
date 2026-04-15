@@ -43,10 +43,10 @@
         android:clipToPadding="false"
         android:fillViewport="true"
         android:overScrollMode="never"
-        android:paddingStart="20dp"
-        android:paddingTop="16dp"
-        android:paddingEnd="20dp"
-        android:paddingBottom="24dp"
+        android:paddingStart="16dp"
+        android:paddingTop="8dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="32dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -60,27 +60,33 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp"
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnBack"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    style="@style/Widget.MaterialComponents.Button.TextButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
                     android:contentDescription="@string/detail_back"
                     android:insetTop="0dp"
                     android:insetBottom="0dp"
-                    android:minHeight="48dp"
+                    android:minWidth="0dp"
+                    android:minHeight="40dp"
                     android:text="@string/detail_back"
                     android:textAllCaps="false"
                     android:textColor="@color/white"
-                    app:backgroundTint="#14FFFFFF"
-                    app:cornerRadius="18dp"
-                    app:strokeColor="@color/home_card_stroke"
-                    app:strokeWidth="1dp" />
+                    android:textSize="16sp"
+                    app:icon="@drawable/ic_arrow_back"
+                    app:iconGravity="textStart"
+                    app:iconSize="20dp"
+                    app:iconTint="@color/white"
+                    app:rippleColor="#33FFFFFF" />
+
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_weight="1" />
 
                 <ImageButton
                     android:id="@+id/btnFavorite"
@@ -95,6 +101,7 @@
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
                 app:cardBackgroundColor="@color/home_card_surface"
                 app:cardCornerRadius="28dp"
                 app:cardElevation="0dp"
@@ -105,26 +112,42 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="24dp">
+                    android:padding="18dp">
 
-                    <TextView
-                        android:id="@+id/txtDetailCity"
+                    <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="@string/detail_city_placeholder"
-                        android:textColor="@color/home_title_text"
-                        android:textSize="28sp"
-                        android:textStyle="bold"
-                        tools:text="Hà Nội" />
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <ImageView
+                            android:layout_width="28dp"
+                            android:layout_height="28dp"
+                            android:layout_marginEnd="10dp"
+                            android:contentDescription="@null"
+                            android:src="@drawable/ic_location_city"
+                            app:tint="@color/home_title_text" />
+
+                        <TextView
+                            android:id="@+id/txtDetailCity"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/detail_city_placeholder"
+                            android:textColor="@color/home_title_text"
+                            android:textSize="28sp"
+                            android:textStyle="bold"
+                            tools:text="Hà Nội" />
+                    </LinearLayout>
 
                     <TextView
                         android:id="@+id/txtDetailTemp"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp"
+                        android:layout_marginTop="10dp"
                         android:text="--°C"
                         android:textColor="@color/home_title_text"
-                        android:textSize="56sp"
+                        android:textSize="48sp"
                         android:textStyle="bold"
                         tools:text="28°C" />
 
@@ -132,11 +155,10 @@
                         android:id="@+id/txtDetailDesc"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="6dp"
-                        android:lineSpacingMultiplier="1.15"
+                        android:layout_marginTop="2dp"
                         android:text="@string/detail_desc_placeholder"
                         android:textColor="@color/home_body_text"
-                        android:textSize="18sp"
+                        android:textSize="16sp"
                         tools:text="Nhiều mây" />
 
                     <com.google.android.material.progressindicator.LinearProgressIndicator
@@ -144,7 +166,7 @@
                         style="@style/Widget.MaterialComponents.LinearProgressIndicator"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp"
+                        android:layout_marginTop="12dp"
                         android:indeterminate="true"
                         android:visibility="gone"
                         app:indicatorColor="@color/purple_700"
@@ -154,10 +176,8 @@
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="20dp"
-                        android:baselineAligned="false"
-                        android:orientation="horizontal"
-                        android:weightSum="2">
+                        android:layout_marginTop="14dp"
+                        android:orientation="horizontal">
 
                         <com.google.android.material.card.MaterialCardView
                             android:layout_width="0dp"
@@ -171,7 +191,7 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:orientation="vertical"
-                                android:padding="16dp">
+                                android:padding="12dp">
 
                                 <TextView
                                     android:layout_width="wrap_content"
@@ -209,7 +229,7 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:orientation="vertical"
-                                android:padding="16dp">
+                                android:padding="12dp">
 
                                 <TextView
                                     android:layout_width="wrap_content"
@@ -230,11 +250,13 @@
                                     tools:text="3.4 m/s" />
                             </LinearLayout>
                         </com.google.android.material.card.MaterialCardView>
+
                     </LinearLayout>
+
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="20dp"
+                        android:layout_marginTop="10dp"
                         android:baselineAligned="false"
                         android:orientation="horizontal"
                         android:weightSum="2">
@@ -254,7 +276,7 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:orientation="vertical"
-                                android:padding="16dp">
+                                android:padding="12dp">
 
                                 <TextView
                                     android:layout_width="wrap_content"
@@ -292,7 +314,7 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:orientation="vertical"
-                                android:padding="16dp">
+                                android:padding="12dp">
 
                                 <TextView
                                     android:layout_width="wrap_content"
@@ -322,7 +344,7 @@
                 android:id="@+id/layoutForecastSections"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="10dp"
                 android:orientation="vertical"
                 android:visibility="gone"
                 tools:visibility="visible">
@@ -339,7 +361,10 @@
                         android:layout_height="wrap_content"
                         android:background="@drawable/bg_forecast_hourly"
                         android:orientation="vertical"
-                        android:padding="20dp">
+                        android:paddingStart="14dp"
+                        android:paddingTop="12dp"
+                        android:paddingEnd="14dp"
+                        android:paddingBottom="12dp">
 
                         <TextView
                             android:layout_width="match_parent"
@@ -353,18 +378,18 @@
                             android:id="@+id/txtHourlySummary"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="10dp"
+                            android:layout_marginTop="6dp"
                             android:gravity="center_horizontal"
                             android:lineSpacingMultiplier="1.2"
                             android:textColor="@color/white"
-                            android:textSize="15sp"
+                            android:textSize="14sp"
                             tools:text="Partly cloudy. Low 24°C." />
 
                         <View
                             android:layout_width="match_parent"
                             android:layout_height="1dp"
-                            android:layout_marginTop="14dp"
-                            android:layout_marginBottom="12dp"
+                            android:layout_marginTop="8dp"
+                            android:layout_marginBottom="8dp"
                             android:background="@drawable/bg_forecast_divider" />
 
                         <androidx.recyclerview.widget.RecyclerView

@@ -22,7 +22,9 @@
         <activity
             android:name=".CityListActivity"
             android:theme="@style/Theme.MyApplication.NoActionBar" />
-        <activity android:name=".DetailActivity" />
+        <activity
+            android:name=".DetailActivity"
+            android:theme="@style/Theme.MyApplication.NoActionBar" />
         <activity
             android:name=".SettingsActivity"
             android:theme="@style/Theme.MyApplication.NoActionBar" />

@@ -22,6 +22,7 @@ import com.example.myapplication.BuildConfig;
 import com.example.myapplication.R;
 import com.example.myapplication.data.model.AirQualityData;
 import com.example.myapplication.data.model.DailyForecast;
+import com.example.myapplication.data.model.DaySlot;
 import com.example.myapplication.data.model.ForecastResult;
 import com.example.myapplication.data.model.HourlyForecast;
 import com.example.myapplication.data.model.WeatherInfo;
@@ -410,11 +411,16 @@ public class WeatherRepository {
                 acc = new DayAccumulator(midnightMillis(cal));
                 dayMap.put(dayKey, acc);
             }
-            double temp = item.getJSONObject("main").getDouble("temp");
+            JSONObject main = item.getJSONObject("main");
+            double temp = main.getDouble("temp");
+            int humidity = main.optInt("humidity", 0);
             double pop = item.optDouble("pop", 0);
+            double windSpeed = item.optJSONObject("wind") != null
+                    ? item.getJSONObject("wind").optDouble("speed", 0) : 0;
             String icon = firstWeatherIcon(item);
             int hour = cal.get(Calendar.HOUR_OF_DAY);
-            acc.addSample(temp, pop, icon, hour);
+            String slotTimeLabel = hourFormat.format(cal.getTime());
+            acc.addSample(temp, pop, icon, hour, slotTimeLabel, humidity, windSpeed);
         }
 
         List<DailyForecast> daily = new ArrayList<>();
@@ -460,12 +466,14 @@ public class WeatherRepository {
         private String iconNight = "02n";
         private int bestDayDist = Integer.MAX_VALUE;
         private int bestNightDist = Integer.MAX_VALUE;
+        private final List<DaySlot> slots = new ArrayList<>();
 
         DayAccumulator(long dayStartMillis) {
             this.dayStartMillis = dayStartMillis;
         }
 
-        void addSample(double temp, double pop, String icon, int hour) {
+        void addSample(double temp, double pop, String icon, int hour, String timeLabel,
+                       int humidity, double windSpeed) {
             minTemp = Math.min(minTemp, temp);
             maxTemp = Math.max(maxTemp, temp);
             maxPop = Math.max(maxPop, pop);
@@ -482,6 +490,8 @@ public class WeatherRepository {
                 bestNightDist = nightDist;
                 iconNight = icon;
             }
+            slots.add(new DaySlot(timeLabel, temp, (int) Math.round(pop * 100.0), icon,
+                    humidity, windSpeed));
         }
 
         private static int nightDistance(int hour) {
@@ -500,7 +510,8 @@ public class WeatherRepository {
                     iconDay,
                     iconNight,
                     (int) Math.round(maxTemp),
-                    (int) Math.round(minTemp)
+                    (int) Math.round(minTemp),
+                    new ArrayList<>(slots)
             );
         }
     }

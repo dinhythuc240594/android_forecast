@@ -43,6 +43,7 @@ import com.example.myapplication.data.model.ForecastResult;
 import com.example.myapplication.data.model.HourlyForecast;
 import com.example.myapplication.data.model.WeatherInfo;
 import com.example.myapplication.data.remote.WeatherRepository;
+import com.example.myapplication.ui.DayDetailBottomSheet;
 import com.example.myapplication.ui.adapter.DailyForecastAdapter;
 import com.example.myapplication.ui.adapter.HourlyForecastAdapter;
 import com.example.myapplication.ui.widget.WeatherAnimationView;
@@ -160,6 +161,9 @@ public class MainActivity extends AppCompatActivity {
         rvHourly.setHasFixedSize(true);
 
         dailyForecastAdapter = new DailyForecastAdapter(dailyForecastItems);
+        dailyForecastAdapter.setOnDayClickListener(forecast ->
+                DayDetailBottomSheet.newInstance(forecast)
+                        .show(getSupportFragmentManager(), "day_detail"));
         rvDaily.setLayoutManager(new LinearLayoutManager(this));
         rvDaily.setAdapter(dailyForecastAdapter);
 

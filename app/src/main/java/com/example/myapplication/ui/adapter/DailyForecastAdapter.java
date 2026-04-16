@@ -19,10 +19,19 @@ import java.util.Locale;
 
 public class DailyForecastAdapter extends RecyclerView.Adapter<DailyForecastAdapter.Holder> {
 
+    public interface OnDayClickListener {
+        void onDayClick(DailyForecast forecast);
+    }
+
     private final List<DailyForecast> items;
+    private OnDayClickListener listener;
 
     public DailyForecastAdapter(List<DailyForecast> items) {
         this.items = items;
+    }
+
+    public void setOnDayClickListener(OnDayClickListener listener) {
+        this.listener = listener;
     }
 
     @NonNull
@@ -40,6 +49,9 @@ public class DailyForecastAdapter extends RecyclerView.Adapter<DailyForecastAdap
         loadIcon(holder.imgDay, d.getIconDay());
         loadIcon(holder.imgNight, d.getIconNight());
         holder.txtTemps.setText(String.format(Locale.getDefault(), "%d° %d°", d.getTempMax(), d.getTempMin()));
+        holder.itemView.setOnClickListener(v -> {
+            if (listener != null) listener.onDayClick(d);
+        });
     }
 
     private static void loadIcon(ImageView target, String iconCode) {

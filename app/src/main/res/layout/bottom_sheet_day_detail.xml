@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_bottom_sheet"
+    android:orientation="vertical"
+    android:paddingBottom="24dp">
+
+    <View
+        android:layout_width="40dp"
+        android:layout_height="4dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="12dp"
+        android:layout_marginBottom="16dp"
+        android:background="@drawable/bg_handle_bar" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp">
+
+        <TextView
+            android:id="@+id/txtDayTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textColor="@android:color/white"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            tools:text="Ngày mai" />
+
+        <TextView
+            android:id="@+id/txtTempRange"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="#AAFFFFFF"
+            android:textSize="15sp"
+            tools:text="28° – 34°" />
+    </LinearLayout>
+
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:clipToPadding="false"
+        android:overScrollMode="never"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:scrollbars="none">
+
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/chipGroupMetrics"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:chipSpacingHorizontal="6dp"
+            app:singleLine="true"
+            app:singleSelection="true"
+            app:selectionRequired="true">
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipTemp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checkable="true"
+                android:checked="true"
+                android:textSize="13sp"
+                app:checkedIconVisible="false"
+                app:chipCornerRadius="16dp"
+                app:chipIcon="@drawable/ic_metric_temp"
+                app:chipIconSize="16dp"
+                app:chipStrokeColor="#44FFFFFF"
+                app:chipStrokeWidth="1dp"
+                tools:text="Nhiệt độ" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipRain"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checkable="true"
+                android:textSize="13sp"
+                app:checkedIconVisible="false"
+                app:chipCornerRadius="16dp"
+                app:chipIcon="@drawable/ic_metric_rain"
+                app:chipIconSize="16dp"
+                app:chipStrokeColor="#44FFFFFF"
+                app:chipStrokeWidth="1dp"
+                tools:text="Mưa" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipHumidity"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checkable="true"
+                android:textSize="13sp"
+                app:checkedIconVisible="false"
+                app:chipCornerRadius="16dp"
+                app:chipIcon="@drawable/ic_metric_humidity"
+                app:chipIconSize="16dp"
+                app:chipStrokeColor="#44FFFFFF"
+                app:chipStrokeWidth="1dp"
+                tools:text="Độ ẩm" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipWind"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checkable="true"
+                android:textSize="13sp"
+                app:checkedIconVisible="false"
+                app:chipCornerRadius="16dp"
+                app:chipIcon="@drawable/ic_metric_wind"
+                app:chipIconSize="16dp"
+                app:chipStrokeColor="#44FFFFFF"
+                app:chipStrokeWidth="1dp"
+                tools:text="Gió" />
+
+        </com.google.android.material.chip.ChipGroup>
+    </HorizontalScrollView>
+
+    <com.example.myapplication.ui.widget.TemperatureChartView
+        android:id="@+id/chartTemperature"
+        android:layout_width="match_parent"
+        android:layout_height="220dp"
+        android:layout_marginTop="4dp" />
+
+    <TextView
+        android:id="@+id/txtChartHint"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:paddingTop="4dp"
+        android:textColor="#66FFFFFF"
+        android:textSize="12sp"
+        tools:text="Dự báo mỗi 3 giờ" />
+</LinearLayout>

@@ -1,6 +1,10 @@
 package com.example.myapplication.data.model;
 
-public final class DailyForecast {
+import java.io.Serializable;
+import java.util.Collections;
+import java.util.List;
+
+public final class DailyForecast implements Serializable {
 
     private final String dayLabel;
     private final int popPercent;
@@ -8,6 +12,7 @@ public final class DailyForecast {
     private final String iconNight;
     private final int tempMax;
     private final int tempMin;
+    private final List<DaySlot> slots;
 
     public DailyForecast(
             String dayLabel,
@@ -15,7 +20,8 @@ public final class DailyForecast {
             String iconDay,
             String iconNight,
             int tempMax,
-            int tempMin
+            int tempMin,
+            List<DaySlot> slots
     ) {
         this.dayLabel = dayLabel;
         this.popPercent = popPercent;
@@ -23,6 +29,7 @@ public final class DailyForecast {
         this.iconNight = iconNight;
         this.tempMax = tempMax;
         this.tempMin = tempMin;
+        this.slots = slots != null ? slots : Collections.emptyList();
     }
 
     public String getDayLabel() {
@@ -47,5 +54,9 @@ public final class DailyForecast {
 
     public int getTempMin() {
         return tempMin;
+    }
+
+    public List<DaySlot> getSlots() {
+        return slots;
     }
 }

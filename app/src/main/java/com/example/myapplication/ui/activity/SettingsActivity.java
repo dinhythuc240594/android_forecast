@@ -93,15 +93,27 @@ public class SettingsActivity extends AppCompatActivity {
 
         switchNotification.setChecked(enabled);
         updateNotifTimeUi();
-        layoutNotifTime.setAlpha(enabled ? 1f : 0.4f);
-        btnPickTime.setEnabled(enabled);
+        applyNotifTimeEnabled(enabled);
 
         switchNotification.setOnCheckedChangeListener((btn, checked) -> {
-            layoutNotifTime.setAlpha(checked ? 1f : 0.4f);
-            btnPickTime.setEnabled(checked);
+            applyNotifTimeEnabled(checked);
+            if (checked) {
+                showTimePicker();
+            }
         });
 
         btnPickTime.setOnClickListener(v -> showTimePicker());
+        layoutNotifTime.setOnClickListener(v -> {
+            if (switchNotification.isChecked()) {
+                showTimePicker();
+            }
+        });
+    }
+
+    private void applyNotifTimeEnabled(boolean enabled) {
+        layoutNotifTime.setAlpha(enabled ? 1f : 0.4f);
+        btnPickTime.setEnabled(enabled);
+        layoutNotifTime.setClickable(enabled);
     }
 
     private void showTimePicker() {

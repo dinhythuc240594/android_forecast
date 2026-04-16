@@ -512,14 +512,15 @@ public class WeatherRepository {
         Calendar today = Calendar.getInstance(TimeZone.getDefault());
         stripToMidnight(today);
         long diffDays = (day.getTimeInMillis() - today.getTimeInMillis()) / (24L * 60L * 60L * 1000L);
+        boolean isVietnamese = LanguageHelper.LANGUAGE_VIETNAMESE.equals(
+                LanguageHelper.getCurrentLanguage(context));
         if (diffDays == 0) {
-            return context.getString(R.string.main_forecast_today);
+            return isVietnamese ? "Hôm nay" : "Today";
         }
         if (diffDays == 1) {
-            return context.getString(R.string.main_forecast_tomorrow);
+            return isVietnamese ? "Ngày mai" : "Tomorrow";
         }
-        String lang = LanguageHelper.getCurrentLanguage(context);
-        if (LanguageHelper.LANGUAGE_VIETNAMESE.equals(lang)) {
+        if (isVietnamese) {
             return vietnameseShortWeekday(day);
         }
         Locale locale = Locale.ENGLISH;

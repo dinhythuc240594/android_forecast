@@ -36,7 +36,7 @@
             android:layout_height="match_parent"
             android:background="@drawable/bg_main_day_shimmer" />
 
-        <com.example.myapplication.WeatherAnimationView
+        <com.example.myapplication.ui.widget.WeatherAnimationView
             android:id="@+id/weatherAnimationView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"

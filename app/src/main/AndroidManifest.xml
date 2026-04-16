@@ -12,7 +12,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.MyApplication">
         <activity
-            android:name=".MainActivity"
+            android:name=".ui.activity.MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -20,15 +20,15 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".CityListActivity"
+            android:name=".ui.activity.CityListActivity"
             android:theme="@style/Theme.MyApplication.NoActionBar" />
         <activity
-            android:name=".DetailActivity"
+            android:name=".ui.activity.DetailActivity"
             android:theme="@style/Theme.MyApplication.NoActionBar" />
         <activity
-            android:name=".SettingsActivity"
+            android:name=".ui.activity.SettingsActivity"
             android:theme="@style/Theme.MyApplication.NoActionBar" />
-        <activity android:name=".AqiDetailActivity" />
+        <activity android:name=".ui.activity.AqiDetailActivity" />
     </application>
     <uses-permission android:name="android.permission.INTERNET"
         tools:ignore="ManifestOrder" />

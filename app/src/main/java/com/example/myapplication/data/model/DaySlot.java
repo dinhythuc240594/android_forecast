@@ -4,6 +4,7 @@ import java.io.Serializable;
 
 public final class DaySlot implements Serializable {
 
+    // lop dinh nghia bieu do theo ngay cua du bao thoi tiet
     private final String timeLabel;
     private final double temp;
     private final int popPercent;

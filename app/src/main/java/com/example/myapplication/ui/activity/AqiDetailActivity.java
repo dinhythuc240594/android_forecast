@@ -21,6 +21,8 @@ import java.util.Locale;
 
 public class AqiDetailActivity extends AppCompatActivity {
 
+    // man hinh ve chi tiet khong khi
+
     public static final String EXTRA_LAT = "extra_lat";
     public static final String EXTRA_LON = "extra_lon";
     public static final String EXTRA_CITY = "extra_city";

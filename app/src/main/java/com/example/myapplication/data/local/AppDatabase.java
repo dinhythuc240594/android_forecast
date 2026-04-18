@@ -9,6 +9,7 @@ import androidx.room.RoomDatabase;
 @Database(entities = {FavoriteCity.class, CachedWeather.class}, version = 2, exportSchema = false)
 public abstract class AppDatabase extends RoomDatabase {
 
+    // dinh nghia ve database cache cua ung dung
     private static volatile AppDatabase INSTANCE;
 
     public abstract FavoriteCityDao favoriteCityDao();

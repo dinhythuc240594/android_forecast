@@ -65,6 +65,7 @@ import java.util.concurrent.Executors;
 
 public class MainActivity extends AppCompatActivity {
 
+    // man hinh chinh cua ung dung
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 100;
     private static final String WEATHER_REQUEST_TAG = "main_weather";
     private static final String FORECAST_REQUEST_TAG = "main_forecast";

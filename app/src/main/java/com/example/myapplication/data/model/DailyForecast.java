@@ -6,6 +6,7 @@ import java.util.List;
 
 public final class DailyForecast implements Serializable {
 
+    // dinh nghia lop du bao bao hang ngay
     private final String dayLabel;
     private final int popPercent;
     private final String iconDay;

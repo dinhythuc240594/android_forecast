@@ -2,6 +2,8 @@ package com.example.myapplication.data.model;
 
 public final class HourlyForecast {
 
+    // lop dinh nghia bieu do theo gio cua du bao thoi tiet
+
     private final String timeLabel;
     private final double temp;
     private final int popPercent;

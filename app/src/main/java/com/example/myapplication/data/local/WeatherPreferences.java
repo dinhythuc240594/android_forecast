@@ -5,6 +5,8 @@ import android.content.SharedPreferences;
 
 public final class WeatherPreferences {
 
+    // dinh nghia ve cac gia tri man hinh cai dat
+
     private static final String PREF_NAME = "WeatherAppPrefs";
     private static final String KEY_UNIT = "unit";
     private static final String KEY_LANGUAGE = "language";

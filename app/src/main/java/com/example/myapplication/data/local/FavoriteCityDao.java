@@ -11,6 +11,8 @@ import java.util.List;
 @Dao
 public interface FavoriteCityDao {
 
+    // DAO ve thanh pho yeu thich
+
     @Query("SELECT * FROM favorite_city ORDER BY addedAt DESC")
     List<FavoriteCity> getAll();
 

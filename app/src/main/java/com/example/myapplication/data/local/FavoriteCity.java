@@ -7,6 +7,8 @@ import androidx.room.PrimaryKey;
 @Entity(tableName = "favorite_city")
 public class FavoriteCity {
 
+    // dinh nghia ve tp yeu thich
+
     @PrimaryKey
     @NonNull
     public String cityName;

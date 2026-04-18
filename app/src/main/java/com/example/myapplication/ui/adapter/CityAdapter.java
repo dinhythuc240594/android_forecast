@@ -20,6 +20,7 @@ import java.util.Set;
 
 public class CityAdapter extends RecyclerView.Adapter<CityAdapter.CityViewHolder> {
 
+    // xu ly du lieu tinh thanh
     private final List<ProvinceItem> masterList = new ArrayList<>();
     private final List<ProvinceItem> cityList = new ArrayList<>();
     private final Set<String> favoriteNames = new HashSet<>();

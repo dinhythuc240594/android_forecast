@@ -5,6 +5,7 @@ import java.util.List;
 
 public final class ForecastResult {
 
+    // lop dinh nghia mang du bao theo ngay va gio
     private final List<HourlyForecast> hourly;
     private final List<DailyForecast> daily;
 

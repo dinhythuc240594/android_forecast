@@ -9,6 +9,8 @@ import com.example.myapplication.data.model.WeatherInfo;
 @Entity(tableName = "cached_weather")
 public class CachedWeather {
 
+    // luu cache ve thong tin thoi tiet tp
+
     @PrimaryKey
     @NonNull
     public String cacheKey;

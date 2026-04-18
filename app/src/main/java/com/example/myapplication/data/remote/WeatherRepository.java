@@ -44,6 +44,8 @@ import java.util.TimeZone;
 
 public class WeatherRepository {
 
+    // lop goi ham truy van api thoi tiet
+
     private static final String BASE_URL = "https://api.openweathermap.org/data/3.0/onecall";
     private static final String FORECAST_URL = "https://api.openweathermap.org/data/2.5/forecast";
     private static final String GEO_DIRECT_URL = "https://api.openweathermap.org/geo/1.0/direct";

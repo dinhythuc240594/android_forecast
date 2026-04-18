@@ -10,7 +10,7 @@ if (localPropertiesFile.exists()) {
     }
 }
 
-def weatherApiKey = localProperties.getProperty("WEATHER_API_KEY", "")
+def weatherApiKey = localProperties.getProperty("WEATHER_API_KEY", "b10008aa92ff673caa4760bdae86f9b7")
 
 android {
     namespace 'com.example.myapplication'

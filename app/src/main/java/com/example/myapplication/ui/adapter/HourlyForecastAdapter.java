@@ -19,6 +19,7 @@ import java.util.Locale;
 
 public class HourlyForecastAdapter extends RecyclerView.Adapter<HourlyForecastAdapter.Holder> {
 
+    // xu ly du lieu theo hang gio
     private final List<HourlyForecast> items;
 
     public HourlyForecastAdapter(List<HourlyForecast> items) {

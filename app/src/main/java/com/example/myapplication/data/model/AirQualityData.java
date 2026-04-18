@@ -4,6 +4,7 @@ import java.io.Serializable;
 
 public class AirQualityData implements Serializable {
 
+    // dinh nghia lop du lieu khong khi
     public final int aqi;
     public final double co;
     public final double no;

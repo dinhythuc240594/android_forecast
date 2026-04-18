@@ -41,6 +41,7 @@ import java.util.concurrent.Executors;
 
 public class DetailActivity extends AppCompatActivity {
 
+    // man hinh chi tiet cua mot tinh thanh
     private static final String WEATHER_REQUEST_TAG = "detail_weather";
     private static final String FORECAST_REQUEST_TAG = "detail_forecast";
 

@@ -44,6 +44,7 @@ import java.util.concurrent.Executors;
 
 public class CityListActivity extends AppCompatActivity {
 
+    // man hinh danh sach tinh thanh
     public static final String EXTRA_FOCUS_SEARCH = "extra_focus_search";
 
     private static final String PROVINCES_API =

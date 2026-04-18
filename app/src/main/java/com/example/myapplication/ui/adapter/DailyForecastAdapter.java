@@ -19,6 +19,7 @@ import java.util.Locale;
 
 public class DailyForecastAdapter extends RecyclerView.Adapter<DailyForecastAdapter.Holder> {
 
+    // xu ly du lieu du bao
     public interface OnDayClickListener {
         void onDayClick(DailyForecast forecast);
     }

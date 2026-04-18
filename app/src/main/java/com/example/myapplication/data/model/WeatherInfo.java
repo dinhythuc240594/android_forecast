@@ -2,6 +2,7 @@ package com.example.myapplication.data.model;
 
 public class WeatherInfo {
 
+    // lop dinh nghia ve du bao thoi tiet
     private final String cityName;
     private final double temperature;
     private final String description;

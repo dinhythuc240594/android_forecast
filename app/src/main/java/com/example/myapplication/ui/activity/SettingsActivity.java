@@ -27,6 +27,7 @@ import java.util.Locale;
 
 public class SettingsActivity extends AppCompatActivity {
 
+    // man hinh cai dat cua ung dung
     private static final int NOTIF_PERMISSION_REQUEST = 200;
 
     private RadioButton rbCelsius;

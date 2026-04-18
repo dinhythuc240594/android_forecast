@@ -6,6 +6,8 @@ package com.example.myapplication.data.model;
  */
 public final class ProvinceItem {
 
+    // lop dinh nghia du bao theo tp
+
     public final String displayName;
     public final String weatherQuery;
 

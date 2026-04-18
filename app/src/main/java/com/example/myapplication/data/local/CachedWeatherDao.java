@@ -8,6 +8,7 @@ import androidx.room.Query;
 @Dao
 public interface CachedWeatherDao {
 
+    // luu cache tp yeu thich
     @Query("SELECT * FROM cached_weather WHERE cacheKey = :key AND unit = :unit LIMIT 1")
     CachedWeather get(String key, String unit);
 

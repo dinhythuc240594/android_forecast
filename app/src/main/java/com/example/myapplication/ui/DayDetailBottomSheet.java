@@ -25,6 +25,7 @@ import com.google.android.material.chip.ChipGroup;
 
 public class DayDetailBottomSheet extends BottomSheetDialogFragment {
 
+    // hop thoai hien thi bieu bo
     private static final String ARG_FORECAST = "arg_forecast";
 
     private DailyForecast forecast;
